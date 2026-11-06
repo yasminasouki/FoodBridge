@@ -64,3 +64,37 @@ public sealed record Activity(
     string? ReceiverType,
     IReadOnlyList<MyRequest> Requests,
     IReadOnlyList<MyReservation> Reservations);
+
+public sealed record AllocationLine(
+    int RequestId,
+    int RequestedQuantity,
+    int GrantedQuantity,
+    int PriorityScore,
+    string Status,
+    string? PickupCode);
+
+public sealed record AllocationResult(
+    int ListingId,
+    string Status,
+    int RemainingQuantity,
+    IReadOnlyList<AllocationLine> Lines);
+
+public sealed record CloseResult(int ListingId, string Status, int NoShowCount);
+
+public sealed record PendingApproval(
+    string UserId,
+    string FullName,
+    string Email,
+    string Kind,
+    string Name);
+
+public sealed record ImpactRow(
+    int ShopId,
+    string ShopName,
+    int AreaId,
+    string AreaName,
+    decimal KilosSaved,
+    int CollectedUnits,
+    int NoShowUnits,
+    decimal CollectionRate,
+    decimal NoShowRate);

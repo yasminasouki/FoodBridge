@@ -1,0 +1,41 @@
+@model IReadOnlyList<PendingApproval>
+@{
+    ViewData["Title"] = "Approvals";
+}
+
+<h1>Waiting for approval</h1>
+@if (Model.Count == 0)
+{
+    <p class="text-muted">No shops or NGOs are waiting.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Kind</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Name</td>
+                        <td>@item.Email</td>
+                        <td>@item.Kind</td>
+                        <td>
+                            <form asp-action="Approve" method="post">
+                                <input type="hidden" name="userId" value="@item.UserId" />
+                                <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

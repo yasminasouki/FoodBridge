@@ -1,0 +1,78 @@
+@model ImpactQuery
+@{
+    ViewData["Title"] = "Impact";
+}
+
+<h1>Impact report</h1>
+<p class="text-muted">The end date is included. Kilos are collected units times the weight of each unit.</p>
+<form method="get" class="row g-2 align-items-end mb-4">
+    <div class="col-sm-3">
+        <label class="form-label" asp-for="From"></label>
+        <input class="form-control" asp-for="From" type="date" />
+    </div>
+    <div class="col-sm-3">
+        <label class="form-label" asp-for="To"></label>
+        <input class="form-control" asp-for="To" type="date" />
+    </div>
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="col-sm-3">
+            <label class="form-label" for="areaId">Area</label>
+            <select class="form-select" id="areaId" name="areaId">
+                <option value="">All areas</option>
+                @foreach (var area in Model.Areas)
+                {
+                    if (Model.AreaId == area.Id)
+                    {
+                        <option value="@area.Id" selected>@area.Name</option>
+                    }
+                    else
+                    {
+                        <option value="@area.Id">@area.Name</option>
+                    }
+                }
+            </select>
+        </div>
+    }
+    <div class="col-sm-3">
+        <button class="btn btn-success" type="submit">Show</button>
+    </div>
+</form>
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+@if (Model.Rows.Count == 0)
+{
+    <p class="text-muted">No collected or missed pickups in this range.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Shop</th>
+                    <th>Area</th>
+                    <th>Kilos saved</th>
+                    <th>Collected</th>
+                    <th>No-shows</th>
+                    <th>Collection rate</th>
+                    <th>No-show rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Model.Rows)
+                {
+                    <tr>
+                        <td>@row.ShopName</td>
+                        <td>@row.AreaName</td>
+                        <td>@row.KilosSaved.ToString("0.###")</td>
+                        <td>@row.CollectedUnits</td>
+                        <td>@row.NoShowUnits</td>
+                        <td>@row.CollectionRate.ToString("0.##")</td>
+                        <td>@row.NoShowRate.ToString("0.##")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

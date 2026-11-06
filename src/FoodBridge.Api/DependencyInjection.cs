@@ -28,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUser, CurrentUser>();
         services.AddScoped<IAuthorizationHandler, ApprovedShopHandler>();
         services.AddScoped<IAuthorizationHandler, CanClaimHandler>();
+        services.AddSingleton<IAuthorizationMiddlewareResultHandler, ForbiddenResultHandler>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>

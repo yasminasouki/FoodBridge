@@ -19,6 +19,12 @@ public sealed class AccountController : Controller
     }
 
     [HttpGet]
+    public IActionResult Denied()
+    {
+        return View();
+    }
+
+    [HttpGet]
     public IActionResult Login(string? returnUrl)
     {
         return View(new LoginViewModel { ReturnUrl = returnUrl });
