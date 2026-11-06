@@ -61,7 +61,7 @@ public sealed class Reservation : AuditableEntity
 
         if (!string.Equals(PickupCode, pickupCode?.Trim(), StringComparison.Ordinal))
         {
-            throw new ConflictException("The pickup code is wrong.");
+            throw new DomainException("The pickup code is wrong.");
         }
 
         Status = ReservationStatus.Collected;

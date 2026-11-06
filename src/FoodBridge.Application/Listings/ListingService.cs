@@ -1,6 +1,7 @@
 using FoodBridge.Application.Persistence;
 using FoodBridge.Application.Security;
 using FoodBridge.Domain.Entities;
+using FoodBridge.Domain.Enums;
 using FoodBridge.Domain.Exceptions;
 
 namespace FoodBridge.Application.Listings;
@@ -8,17 +9,23 @@ namespace FoodBridge.Application.Listings;
 public sealed class ListingService : IListingService
 {
     private readonly IListingRepository _listings;
+    private readonly IReservationRepository _reservations;
+    private readonly IReceiverProfileRepository _profiles;
     private readonly IShopRepository _shops;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClock _clock;
 
     public ListingService(
         IListingRepository listings,
+        IReservationRepository reservations,
+        IReceiverProfileRepository profiles,
         IShopRepository shops,
         IUnitOfWork unitOfWork,
         IClock clock)
     {
         _listings = listings;
+        _reservations = reservations;
+        _profiles = profiles;
         _shops = shops;
         _unitOfWork = unitOfWork;
         _clock = clock;
@@ -112,5 +119,40 @@ public sealed class ListingService : IListingService
 
         listing.Cancel();
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<CloseListingResultDto> CloseAsync(
+        string userId,
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var shop = await _shops.GetByOwnerAsync(userId, cancellationToken)
+            ?? throw new ForbiddenException("Only a shop can close a listing.");
+        var listing = await _listings.GetByIdAsync(id, cancellationToken)
+            ?? throw new NotFoundException("Listing was not found.");
+        if (listing.ShopId != shop.Id)
+        {
+            throw new ForbiddenException("You can only close your own listing.");
+        }
+
+        listing.Close(_clock.UtcNow);
+        var pending = await _reservations.ListPendingForListingAsync(id, cancellationToken);
+        var profiles = await _profiles.GetTrackedByUserIdsAsync(
+            pending.Select(reservation => reservation.ReceiverId).Distinct().ToArray(),
+            cancellationToken);
+        var profilesByUser = profiles.ToDictionary(profile => profile.UserId);
+        foreach (var reservation in pending)
+        {
+            reservation.MarkNoShow();
+            if (!profilesByUser.TryGetValue(reservation.ReceiverId, out var profile))
+            {
+                throw new NotFoundException("A receiver profile was not found.");
+            }
+
+            profile.ApplyNoShow(_clock.UtcNow);
+        }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return new CloseListingResultDto(listing.Id, listing.Status.ToString(), pending.Count);
     }
 }

@@ -40,3 +40,5 @@ public sealed record LookupItemDto(int Id, string Name, string? District);
 public sealed record LookupDto(
     IReadOnlyList<LookupItemDto> Areas,
     IReadOnlyList<LookupItemDto> Categories);
+
+public sealed record CloseListingResultDto(int ListingId, string Status, int NoShowCount);

@@ -19,6 +19,8 @@ public interface IListingService
         CancellationToken cancellationToken = default);
 
     Task CancelAsync(string userId, int id, CancellationToken cancellationToken = default);
+
+    Task<CloseListingResultDto> CloseAsync(string userId, int id, CancellationToken cancellationToken = default);
 }
 
 public interface ILookupService
