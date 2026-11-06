@@ -1,0 +1,63 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<h1>Create an account</h1>
+<form asp-action="Register" method="post" class="form-card">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="mb-3">
+        <label asp-for="FullName" class="form-label"></label>
+        <input asp-for="FullName" class="form-control" />
+        <span asp-validation-for="FullName" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label"></label>
+        <input asp-for="Password" class="form-control" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Role" class="form-label"></label>
+        <select asp-for="Role" class="form-select">
+            <option>Receiver</option>
+            <option>Ngo</option>
+            <option>Shop</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label asp-for="AreaId" class="form-label"></label>
+        <select asp-for="AreaId" class="form-select">
+            <option value="">Choose an area</option>
+            @foreach (var area in Model.Areas)
+            {
+                <option value="@area.Id">@area.Name, @area.District</option>
+            }
+        </select>
+        <span asp-validation-for="AreaId" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="ShopName" class="form-label"></label>
+        <input asp-for="ShopName" class="form-control" />
+        <span asp-validation-for="ShopName" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Address" class="form-label"></label>
+        <input asp-for="Address" class="form-control" />
+        <span asp-validation-for="Address" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="PeopleServed" class="form-label"></label>
+        <input asp-for="PeopleServed" class="form-control" />
+        <span asp-validation-for="PeopleServed" class="text-danger"></span>
+    </div>
+    <button class="btn btn-success" type="submit">Register</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

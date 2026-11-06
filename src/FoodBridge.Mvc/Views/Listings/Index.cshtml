@@ -1,0 +1,81 @@
+@model BrowseViewModel
+@{
+    ViewData["Title"] = "Listings";
+}
+
+<section class="page-heading">
+    <h1>Food available now</h1>
+    <p>Shops post what they cannot sell. Request it before the window ends.</p>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(Model.Error))
+{
+    <div class="alert alert-danger">@Model.Error</div>
+}
+
+<form method="get" class="row g-2 align-items-end mb-4">
+    <div class="col-sm-4">
+        <label class="form-label" for="areaId">Area</label>
+        <select class="form-select" id="areaId" name="areaId">
+            <option value="">All areas</option>
+            @foreach (var area in Model.Lookups.Areas)
+            {
+                if (Model.AreaId == area.Id)
+                {
+                    <option value="@area.Id" selected>@area.Name</option>
+                }
+                else
+                {
+                    <option value="@area.Id">@area.Name</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="col-sm-4">
+        <label class="form-label" for="categoryId">Category</label>
+        <select class="form-select" id="categoryId" name="categoryId">
+            <option value="">All categories</option>
+            @foreach (var category in Model.Lookups.Categories)
+            {
+                if (Model.CategoryId == category.Id)
+                {
+                    <option value="@category.Id" selected>@category.Name</option>
+                }
+                else
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="col-sm-4">
+        <button class="btn btn-success" type="submit">Filter</button>
+    </div>
+</form>
+
+@if (Model.Listings.Items.Count == 0)
+{
+    <p class="text-muted">No open listings match this filter.</p>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var listing in Model.Listings.Items)
+        {
+            <div class="col-md-6 col-lg-4">
+                <partial name="_ListingCard" model="listing" />
+            </div>
+        }
+    </div>
+
+    <nav class="mt-4" aria-label="Pages">
+        @if (Model.Page > 1)
+        {
+            <a class="btn btn-outline-secondary" asp-action="Index" asp-route-areaId="@Model.AreaId" asp-route-categoryId="@Model.CategoryId" asp-route-page="@(Model.Page - 1)">Previous</a>
+        }
+        @if (Model.Page * Model.Listings.PageSize < Model.Listings.TotalCount)
+        {
+            <a class="btn btn-outline-secondary" asp-action="Index" asp-route-areaId="@Model.AreaId" asp-route-categoryId="@Model.CategoryId" asp-route-page="@(Model.Page + 1)">Next</a>
+        }
+    </nav>
+}

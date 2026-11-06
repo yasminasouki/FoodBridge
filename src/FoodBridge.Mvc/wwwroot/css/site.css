@@ -19,6 +19,42 @@ html {
 
 body {
   margin-bottom: 60px;
+  background: #f6f3ee;
+  color: #243027;
+}
+
+.navbar {
+  background: #1f6b4a;
+}
+
+.page-heading h1,
+h1 {
+  font-weight: 650;
+}
+
+.listing-card {
+  border: 0;
+  box-shadow: 0 8px 24px rgba(36, 48, 39, 0.06);
+}
+
+.form-card {
+  max-width: 32rem;
+}
+
+.pickup-code {
+  font-family: ui-monospace, Consolas, monospace;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.btn-success {
+  background: #1f6b4a;
+  border-color: #1f6b4a;
+}
+
+.btn-outline-success {
+  color: #1f6b4a;
+  border-color: #1f6b4a;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
