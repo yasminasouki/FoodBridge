@@ -1,3 +1,4 @@
+using FoodBridge.Application.Allocation;
 using FoodBridge.Application.Listings;
 using FoodBridge.Application.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -10,11 +11,16 @@ namespace FoodBridge.Api.Controllers;
 public sealed class ListingsController : ControllerBase
 {
     private readonly IListingService _listings;
+    private readonly IAllocationService _allocation;
     private readonly ICurrentUser _currentUser;
 
-    public ListingsController(IListingService listings, ICurrentUser currentUser)
+    public ListingsController(
+        IListingService listings,
+        IAllocationService allocation,
+        ICurrentUser currentUser)
     {
         _listings = listings;
+        _allocation = allocation;
         _currentUser = currentUser;
     }
 
@@ -73,5 +79,35 @@ public sealed class ListingsController : ControllerBase
     {
         await _listings.CancelAsync(_currentUser.UserId!, id, cancellationToken);
         return NoContent();
+    }
+
+    [Authorize(Policy = "CanClaim")]
+    [HttpPost("{id:int}/requests")]
+    [ProducesResponseType(typeof(ClaimRequestDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<ClaimRequestDto>> CreateRequest(
+        int id,
+        CreateClaimRequest request,
+        CancellationToken cancellationToken)
+    {
+        var created = await _allocation.RequestAsync(
+            _currentUser.UserId!,
+            id,
+            request.Quantity,
+            cancellationToken);
+        return StatusCode(StatusCodes.Status201Created, created);
+    }
+
+    [Authorize(Policy = "CanPostFood")]
+    [HttpPost("{id:int}/allocate")]
+    [ProducesResponseType(typeof(AllocationResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<AllocationResultDto>> Allocate(int id, CancellationToken cancellationToken)
+    {
+        return Ok(await _allocation.AllocateAsync(_currentUser.UserId!, id, cancellationToken));
     }
 }

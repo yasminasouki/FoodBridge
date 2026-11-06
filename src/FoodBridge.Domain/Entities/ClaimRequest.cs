@@ -1,5 +1,6 @@
 using FoodBridge.Domain.Common;
 using FoodBridge.Domain.Enums;
+using FoodBridge.Domain.Exceptions;
 
 namespace FoodBridge.Domain.Entities;
 
@@ -36,5 +37,31 @@ public sealed class ClaimRequest : BaseEntity
         ListingId = listingId;
         ReceiverId = receiverId;
         RequestedQuantity = requestedQuantity;
+    }
+
+    public void ApplyAllocation(int grantedQuantity, int priorityScore)
+    {
+        if (Status != ClaimRequestStatus.Pending)
+        {
+            throw new ConflictException("This request was already allocated.");
+        }
+
+        if (grantedQuantity < 0 || grantedQuantity > RequestedQuantity)
+        {
+            throw new ConflictException("The granted quantity is not valid.");
+        }
+
+        if (priorityScore < 0)
+        {
+            throw new ConflictException("The priority score is not valid.");
+        }
+
+        AllocatedQuantity = grantedQuantity;
+        PriorityScore = priorityScore;
+        Status = grantedQuantity == 0
+            ? ClaimRequestStatus.NotAllocated
+            : grantedQuantity < RequestedQuantity
+                ? ClaimRequestStatus.Partial
+                : ClaimRequestStatus.Allocated;
     }
 }

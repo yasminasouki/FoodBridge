@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\FoodBridge.Domain\FoodBridge.Domain.csproj" />
+    <ProjectReference Include="..\..\src\FoodBridge.Application\FoodBridge.Application.csproj" />
   </ItemGroup>
 
 </Project>
