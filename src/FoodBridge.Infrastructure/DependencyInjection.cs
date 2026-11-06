@@ -1,6 +1,8 @@
+using FoodBridge.Application.Activity;
 using FoodBridge.Application.Allocation;
 using FoodBridge.Application.Auth;
 using FoodBridge.Application.Listings;
+using FoodBridge.Application.Reports;
 using FoodBridge.Application.Reservations;
 using FoodBridge.Application.Persistence;
 using FoodBridge.Application.Security;
@@ -49,6 +51,10 @@ public static class DependencyInjection
         services.AddScoped<IAllocationService, AllocationService>();
         services.AddScoped<IReservationService, ReservationService>();
         services.AddScoped<IListingService, ListingService>();
+        services.AddScoped<IActivityService, ActivityService>();
+        services.AddScoped<IActivityQuery, ActivityQuery>();
+        services.AddScoped<IImpactReportService, ImpactReportService>();
+        services.AddScoped<IImpactReportQuery, ImpactReportQuery>();
         services.AddScoped<ILookupService, LookupService>();
         services.AddScoped<IReceiverProfileRepository, ReceiverProfileRepository>();
         services.AddScoped<IShopRepository, ShopRepository>();
