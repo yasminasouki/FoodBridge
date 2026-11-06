@@ -60,6 +60,69 @@ public sealed class FoodBridgeApiClient : IFoodBridgeApiClient
         return GetAsync<ListingPage>(QueryHelpers.AddQueryString("/api/listings", query), cancellationToken);
     }
 
+    public Task<ListingPage> GetMyListingsAsync(CancellationToken cancellationToken = default)
+    {
+        return GetAsync<ListingPage>("/api/listings?mine=true&pageSize=50", cancellationToken);
+    }
+
+    public async Task<ListingDetails> CreateListingAsync(NewListing listing, CancellationToken cancellationToken = default)
+    {
+        var response = await _http.PostAsJsonAsync("/api/listings", listing, Json, cancellationToken);
+        return await ReadAsync<ListingDetails>(response, cancellationToken);
+    }
+
+    public async Task<AllocationResult> AllocateAsync(int listingId, CancellationToken cancellationToken = default)
+    {
+        var response = await _http.PostAsync($"/api/listings/{listingId}/allocate", null, cancellationToken);
+        return await ReadAsync<AllocationResult>(response, cancellationToken);
+    }
+
+    public async Task<CloseResult> CloseListingAsync(int listingId, CancellationToken cancellationToken = default)
+    {
+        var response = await _http.PostAsync($"/api/listings/{listingId}/close", null, cancellationToken);
+        return await ReadAsync<CloseResult>(response, cancellationToken);
+    }
+
+    public async Task CollectAsync(string pickupCode, CancellationToken cancellationToken = default)
+    {
+        var response = await _http.PostAsJsonAsync(
+            "/api/reservations/collect",
+            new { pickupCode },
+            Json,
+            cancellationToken);
+        await EnsureSuccessAsync(response);
+    }
+
+    public Task<IReadOnlyList<ImpactRow>> GetImpactAsync(
+        DateTime from,
+        DateTime to,
+        int? areaId,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new Dictionary<string, string?>
+        {
+            ["from"] = from.ToString("o"),
+            ["to"] = to.ToString("o")
+        };
+        if (areaId is int area)
+        {
+            query["areaId"] = area.ToString();
+        }
+
+        return GetAsync<IReadOnlyList<ImpactRow>>(QueryHelpers.AddQueryString("/api/reports/impact", query), cancellationToken);
+    }
+
+    public Task<IReadOnlyList<PendingApproval>> GetApprovalsAsync(CancellationToken cancellationToken = default)
+    {
+        return GetAsync<IReadOnlyList<PendingApproval>>("/api/admin/approvals", cancellationToken);
+    }
+
+    public async Task ApproveAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        var response = await _http.PatchAsync($"/api/admin/approvals/{Uri.EscapeDataString(userId)}", null, cancellationToken);
+        await EnsureSuccessAsync(response);
+    }
+
     public Task<ListingDetails> GetListingAsync(int id, CancellationToken cancellationToken = default)
     {
         return GetAsync<ListingDetails>($"/api/listings/{id}", cancellationToken);
