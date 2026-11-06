@@ -1,4 +1,5 @@
 using FoodBridge.Application.Auth;
+using FoodBridge.Application.Listings;
 using FoodBridge.Application.Persistence;
 using FoodBridge.Application.Security;
 using FoodBridge.Infrastructure.Identity;
@@ -35,6 +36,9 @@ public static class DependencyInjection
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IApprovalService, ApprovalService>();
+        services.AddScoped<IListingService, ListingService>();
+        services.AddScoped<ILookupService, LookupService>();
+        services.AddScoped<IShopRepository, ShopRepository>();
         services.AddScoped<IListingRepository, ListingRepository>();
         services.AddScoped<IClaimRequestRepository, ClaimRequestRepository>();
         services.AddScoped<IReservationRepository, ReservationRepository>();

@@ -70,6 +70,45 @@ public static class DevelopmentSeeder
             areaId: 3,
             shop: null,
             profile: (ReceiverType.Ngo, 12, approved: false));
+
+        await EnsureDemoListingAsync(context);
+    }
+
+    private static async Task EnsureDemoListingAsync(AppDbContext context)
+    {
+        var shop = await context.Shops.FirstOrDefaultAsync(item => item.Name == "Sunrise Bakery");
+        if (shop is null)
+        {
+            return;
+        }
+
+        var now = DateTime.UtcNow;
+        var alreadyOpen = await context.Listings.AnyAsync(item =>
+            item.ShopId == shop.Id &&
+            item.Title == "Evening bread" &&
+            item.Status == ListingStatus.Open &&
+            item.RequestWindowEndsAt > now);
+        if (alreadyOpen)
+        {
+            return;
+        }
+
+        var requestWindowEndsAt = now.AddHours(6);
+        var listing = new Listing(
+            shop.Id,
+            "Evening bread",
+            originalQuantity: 6,
+            weightPerUnitKg: 0.4m,
+            requestWindowEndsAt,
+            pickupFrom: requestWindowEndsAt.AddHours(1),
+            pickupUntil: requestWindowEndsAt.AddHours(3));
+
+        await using var transaction = await context.Database.BeginTransactionAsync();
+        context.Listings.Add(listing);
+        await context.SaveChangesAsync();
+        context.ListingCategories.Add(new ListingCategory(listing.Id, categoryId: 1));
+        await context.SaveChangesAsync();
+        await transaction.CommitAsync();
     }
 
     private static async Task EnsureUserAsync(
