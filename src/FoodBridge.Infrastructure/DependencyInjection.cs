@@ -1,7 +1,9 @@
+using FoodBridge.Application.Allocation;
 using FoodBridge.Application.Auth;
 using FoodBridge.Application.Listings;
 using FoodBridge.Application.Persistence;
 using FoodBridge.Application.Security;
+using FoodBridge.Domain.Allocation;
 using FoodBridge.Infrastructure.Identity;
 using FoodBridge.Infrastructure.Persistence;
 using FoodBridge.Infrastructure.Persistence.Repositories;
@@ -36,8 +38,17 @@ public static class DependencyInjection
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IApprovalService, ApprovalService>();
+        services.AddSingleton<IAllocationStrategy, FairAllocator>();
+        services.AddSingleton<IPriorityRule, NgoSizeRule>();
+        services.AddSingleton<IPriorityRule, RecentReceiptsRule>();
+        services.AddSingleton<IPriorityRule, ReliabilityRule>();
+        services.AddSingleton<IndividualReservationPolicy>();
+        services.AddSingleton<NgoReservationPolicy>();
+        services.AddSingleton<ReservationPolicySelector>();
+        services.AddScoped<IAllocationService, AllocationService>();
         services.AddScoped<IListingService, ListingService>();
         services.AddScoped<ILookupService, LookupService>();
+        services.AddScoped<IReceiverProfileRepository, ReceiverProfileRepository>();
         services.AddScoped<IShopRepository, ShopRepository>();
         services.AddScoped<IListingRepository, ListingRepository>();
         services.AddScoped<IClaimRequestRepository, ClaimRequestRepository>();

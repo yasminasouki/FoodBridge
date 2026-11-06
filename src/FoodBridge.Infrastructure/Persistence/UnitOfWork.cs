@@ -1,4 +1,7 @@
 using FoodBridge.Application.Persistence;
+using FoodBridge.Domain.Exceptions;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace FoodBridge.Infrastructure.Persistence;
 
@@ -24,8 +27,24 @@ public sealed class UnitOfWork : IUnitOfWork
 
     public IReservationRepository Reservations { get; }
 
-    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        return _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            return await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new ConflictException("This listing changed. Load it again and try once more.");
+        }
+        catch (DbUpdateException exception) when (IsUniqueViolation(exception))
+        {
+            throw new ConflictException("This conflicts with an existing row.");
+        }
+    }
+
+    private static bool IsUniqueViolation(DbUpdateException exception)
+    {
+        return exception.InnerException is SqlException sql && sql.Number is 2601 or 2627;
     }
 }
