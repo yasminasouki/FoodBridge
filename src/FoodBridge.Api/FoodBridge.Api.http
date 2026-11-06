@@ -1,0 +1,27 @@
+@host = http://localhost:5280
+
+### Register a receiver
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "New Receiver",
+  "email": "new.receiver@foodbridge.test",
+  "password": "Password1!",
+  "role": "Receiver",
+  "areaId": 1
+}
+
+### Login as admin
+# @name login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@foodbridge.test",
+  "password": "Password1!"
+}
+
+### Pending shops and NGOs
+GET {{host}}/api/admin/approvals
+Authorization: Bearer {{login.response.body.$.token}}
