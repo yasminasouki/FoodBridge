@@ -115,6 +115,16 @@ public sealed class Listing : AuditableEntity
         RemainingQuantity += quantity;
     }
 
+    public void Cancel()
+    {
+        if (Status != ListingStatus.Open)
+        {
+            throw new ConflictException("Only an open listing can be cancelled.");
+        }
+
+        Status = ListingStatus.Cancelled;
+    }
+
     public void Close(DateTime utcNow)
     {
         if (Status is ListingStatus.Closed or ListingStatus.Cancelled)

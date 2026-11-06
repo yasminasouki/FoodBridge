@@ -52,6 +52,25 @@ public class ListingTests
     }
 
     [Fact]
+    public void Cancel_CancelsAnOpenListing()
+    {
+        var listing = NewListing(originalQuantity: 2);
+
+        listing.Cancel();
+
+        Assert.Equal(ListingStatus.Cancelled, listing.Status);
+    }
+
+    [Fact]
+    public void Cancel_RejectsAListingThatWasAllocated()
+    {
+        var listing = NewListing(originalQuantity: 2);
+        listing.MarkAllocated();
+
+        Assert.Throws<ConflictException>(listing.Cancel);
+    }
+
+    [Fact]
     public void Close_Closes_AfterThePickupWindowEnds()
     {
         var listing = NewListing(originalQuantity: 2);
