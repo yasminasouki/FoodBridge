@@ -8,4 +8,10 @@ public interface IReservationRepository : IRepository<Reservation>
         IReadOnlyCollection<string> receiverIds,
         DateTime sinceUtc,
         CancellationToken cancellationToken = default);
+
+    Task<Reservation?> GetByPickupCodeAsync(string pickupCode, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Reservation>> ListPendingForListingAsync(
+        int listingId,
+        CancellationToken cancellationToken = default);
 }

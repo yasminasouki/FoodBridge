@@ -37,4 +37,20 @@ public sealed class ReservationRepository : Repository<Reservation>, IReservatio
 
         return rows.ToDictionary(row => row.ReceiverId, row => row.Total);
     }
+
+    public Task<Reservation?> GetByPickupCodeAsync(string pickupCode, CancellationToken cancellationToken = default)
+    {
+        return _context.Reservations.FirstOrDefaultAsync(
+            reservation => reservation.PickupCode == pickupCode,
+            cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Reservation>> ListPendingForListingAsync(
+        int listingId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Reservations
+            .Where(reservation => reservation.ListingId == listingId && reservation.Status == ReservationStatus.Pending)
+            .ToListAsync(cancellationToken);
+    }
 }

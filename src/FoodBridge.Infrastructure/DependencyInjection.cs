@@ -1,6 +1,7 @@
 using FoodBridge.Application.Allocation;
 using FoodBridge.Application.Auth;
 using FoodBridge.Application.Listings;
+using FoodBridge.Application.Reservations;
 using FoodBridge.Application.Persistence;
 using FoodBridge.Application.Security;
 using FoodBridge.Domain.Allocation;
@@ -46,6 +47,7 @@ public static class DependencyInjection
         services.AddSingleton<NgoReservationPolicy>();
         services.AddSingleton<ReservationPolicySelector>();
         services.AddScoped<IAllocationService, AllocationService>();
+        services.AddScoped<IReservationService, ReservationService>();
         services.AddScoped<IListingService, ListingService>();
         services.AddScoped<ILookupService, LookupService>();
         services.AddScoped<IReceiverProfileRepository, ReceiverProfileRepository>();

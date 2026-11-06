@@ -34,4 +34,18 @@ public sealed class ReceiverProfileRepository : IReceiverProfileRepository
             .Where(profile => userIds.Contains(profile.UserId))
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<ReceiverProfile>> GetTrackedByUserIdsAsync(
+        IReadOnlyCollection<string> userIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (userIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await _context.ReceiverProfiles
+            .Where(profile => userIds.Contains(profile.UserId))
+            .ToListAsync(cancellationToken);
+    }
 }

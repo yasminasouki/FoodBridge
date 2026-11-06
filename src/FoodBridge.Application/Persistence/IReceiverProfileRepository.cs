@@ -9,4 +9,8 @@ public interface IReceiverProfileRepository
     Task<IReadOnlyList<ReceiverProfile>> GetByUserIdsAsync(
         IReadOnlyCollection<string> userIds,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ReceiverProfile>> GetTrackedByUserIdsAsync(
+        IReadOnlyCollection<string> userIds,
+        CancellationToken cancellationToken = default);
 }
