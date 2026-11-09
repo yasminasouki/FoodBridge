@@ -42,7 +42,7 @@ namespace FoodBridge.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Areas");
+                    b.ToTable("Areas", (string)null);
 
                     b.HasData(
                         new
@@ -92,7 +92,7 @@ namespace FoodBridge.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
 
                     b.HasData(
                         new
@@ -159,7 +159,7 @@ namespace FoodBridge.Infrastructure.Persistence.Migrations
                     b.HasIndex("ListingId", "ReceiverId")
                         .IsUnique();
 
-                    b.ToTable("ClaimRequests");
+                    b.ToTable("ClaimRequests", (string)null);
                 });
 
             modelBuilder.Entity("FoodBridge.Domain.Entities.Listing", b =>
@@ -215,7 +215,7 @@ namespace FoodBridge.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ShopId");
 
-                    b.ToTable("Listings", t =>
+                    b.ToTable("Listings", null, t =>
                         {
                             t.HasCheckConstraint("CK_Listings_RemainingQuantity", "[RemainingQuantity] >= 0 AND [RemainingQuantity] <= [OriginalQuantity]");
                         });
@@ -233,7 +233,7 @@ namespace FoodBridge.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("ListingCategories");
+                    b.ToTable("ListingCategories", (string)null);
                 });
 
             modelBuilder.Entity("FoodBridge.Domain.Entities.ReceiverProfile", b =>
@@ -265,7 +265,7 @@ namespace FoodBridge.Infrastructure.Persistence.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("ReceiverProfiles");
+                    b.ToTable("ReceiverProfiles", (string)null);
                 });
 
             modelBuilder.Entity("FoodBridge.Domain.Entities.Reservation", b =>
@@ -301,6 +301,13 @@ namespace FoodBridge.Infrastructure.Persistence.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Direct");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -319,7 +326,7 @@ namespace FoodBridge.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ReceiverId");
 
-                    b.ToTable("Reservations");
+                    b.ToTable("Reservations", (string)null);
                 });
 
             modelBuilder.Entity("FoodBridge.Domain.Entities.Shop", b =>
@@ -359,7 +366,78 @@ namespace FoodBridge.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("OwnerUserId");
 
-                    b.ToTable("Shops");
+                    b.ToTable("Shops", (string)null);
+                });
+
+            modelBuilder.Entity("FoodBridge.Domain.Entities.UserNotification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ListingId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("UserNotifications", (string)null);
+                });
+
+            modelBuilder.Entity("FoodBridge.Domain.Entities.WaitlistEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ListingId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReceiverId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("RequestedQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("ListingId", "ReceiverId")
+                        .IsUnique();
+
+                    b.ToTable("WaitlistEntries", (string)null);
                 });
 
             modelBuilder.Entity("FoodBridge.Infrastructure.Identity.AppUser", b =>
@@ -649,6 +727,21 @@ namespace FoodBridge.Infrastructure.Persistence.Migrations
                     b.HasOne("FoodBridge.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FoodBridge.Domain.Entities.WaitlistEntry", b =>
+                {
+                    b.HasOne("FoodBridge.Domain.Entities.Listing", null)
+                        .WithMany()
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FoodBridge.Domain.Entities.ReceiverProfile", null)
+                        .WithMany()
+                        .HasForeignKey("ReceiverId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

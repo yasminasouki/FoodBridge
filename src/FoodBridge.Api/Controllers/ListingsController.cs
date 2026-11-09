@@ -2,6 +2,7 @@ using FoodBridge.Application.Allocation;
 using FoodBridge.Application.Listings;
 using FoodBridge.Application.Reservations;
 using FoodBridge.Application.Security;
+using FoodBridge.Application.Waitlist;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,17 +15,20 @@ public sealed class ListingsController : ControllerBase
     private readonly IListingService _listings;
     private readonly IAllocationService _allocation;
     private readonly IReservationService _reservations;
+    private readonly IWaitlistService _waitlist;
     private readonly ICurrentUser _currentUser;
 
     public ListingsController(
         IListingService listings,
         IAllocationService allocation,
         IReservationService reservations,
+        IWaitlistService waitlist,
         ICurrentUser currentUser)
     {
         _listings = listings;
         _allocation = allocation;
         _reservations = reservations;
+        _waitlist = waitlist;
         _currentUser = currentUser;
     }
 
@@ -143,5 +147,37 @@ public sealed class ListingsController : ControllerBase
     public async Task<ActionResult<CloseListingResultDto>> Close(int id, CancellationToken cancellationToken)
     {
         return Ok(await _listings.CloseAsync(_currentUser.UserId!, id, cancellationToken));
+    }
+
+    [Authorize(Policy = "CanPostFood")]
+    [HttpGet("{id:int}/allocation")]
+    [ProducesResponseType(typeof(IReadOnlyList<AllocationGrantDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IReadOnlyList<AllocationGrantDto>>> Allocation(int id, CancellationToken cancellationToken)
+    {
+        return Ok(await _listings.GetGrantsAsync(_currentUser.UserId!, id, cancellationToken));
+    }
+
+    [Authorize(Policy = "CanClaim")]
+    [HttpPost("{id:int}/waitlist")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> JoinWaitlist(int id, CreateReservationRequest request, CancellationToken cancellationToken)
+    {
+        await _waitlist.JoinAsync(_currentUser.UserId!, id, request.Quantity, cancellationToken);
+        return NoContent();
+    }
+
+    [Authorize(Policy = "CanClaim")]
+    [HttpDelete("{id:int}/waitlist")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> LeaveWaitlist(int id, CancellationToken cancellationToken)
+    {
+        await _waitlist.LeaveAsync(_currentUser.UserId!, id, cancellationToken);
+        return NoContent();
     }
 }

@@ -124,6 +124,47 @@ public sealed class ShopController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancel(int id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _api.CancelListingAsync(id, cancellationToken);
+            TempData["Message"] = "Listing cancelled. Post it again if the food is still available.";
+        }
+        catch (ApiException exception)
+        {
+            TempData["Error"] = exception.Message;
+        }
+        catch (HttpRequestException)
+        {
+            TempData["Error"] = "The FoodBridge API is not running.";
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Result(int id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            ViewData["ListingId"] = id;
+            return View(await _api.GetAllocationAsync(id, cancellationToken));
+        }
+        catch (ApiException exception)
+        {
+            TempData["Error"] = exception.Message;
+            return RedirectToAction(nameof(Index));
+        }
+        catch (HttpRequestException)
+        {
+            TempData["Error"] = "The FoodBridge API is not running.";
+            return RedirectToAction(nameof(Index));
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Collect(CollectForm form, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)

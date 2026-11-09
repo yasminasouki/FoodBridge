@@ -95,6 +95,23 @@ public sealed class ListingsController : Controller
         return RedirectToAction(nameof(Details), new { id });
     }
 
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> JoinWaitlist(int id, QuantityForm form, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Enter a quantity of at least 1.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        await SendAsync(
+            () => _api.JoinWaitlistAsync(id, form.Quantity, cancellationToken),
+            "You are on the waitlist. If food is released, the update appears under Updates.");
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
     private async Task SendAsync(Func<Task> call, string success)
     {
         try

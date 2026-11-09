@@ -13,6 +13,8 @@ public sealed class ReservationService : IReservationService
     private readonly IReservationRepository _reservations;
     private readonly IReceiverProfileRepository _profiles;
     private readonly IShopRepository _shops;
+    private readonly IWaitlistRepository _waitlist;
+    private readonly IUserNotificationRepository _notifications;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClock _clock;
     private readonly ReservationPolicySelector _policies;
@@ -22,6 +24,8 @@ public sealed class ReservationService : IReservationService
         IReservationRepository reservations,
         IReceiverProfileRepository profiles,
         IShopRepository shops,
+        IWaitlistRepository waitlist,
+        IUserNotificationRepository notifications,
         IUnitOfWork unitOfWork,
         IClock clock,
         ReservationPolicySelector policies)
@@ -30,6 +34,8 @@ public sealed class ReservationService : IReservationService
         _reservations = reservations;
         _profiles = profiles;
         _shops = shops;
+        _waitlist = waitlist;
+        _notifications = notifications;
         _unitOfWork = unitOfWork;
         _clock = clock;
         _policies = policies;
@@ -67,7 +73,13 @@ public sealed class ReservationService : IReservationService
         }
 
         listing.Reserve(quantity);
-        var reservation = new Reservation(listing.Id, userId, claimRequestId: null, quantity, NewPickupCode());
+        var reservation = new Reservation(
+            listing.Id,
+            userId,
+            claimRequestId: null,
+            quantity,
+            NewPickupCode(),
+            ReservationSource.Direct);
         await _reservations.AddAsync(reservation, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return ToDto(reservation);
@@ -113,7 +125,60 @@ public sealed class ReservationService : IReservationService
 
         reservation.Cancel();
         listing.Release(reservation.Quantity);
+        await OfferReleasedFoodAsync(listing, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task OfferReleasedFoodAsync(Listing listing, CancellationToken cancellationToken)
+    {
+        var waiting = await _waitlist.ListWaitingAsync(listing.Id, cancellationToken);
+        if (waiting.Count == 0 || listing.RemainingQuantity == 0)
+        {
+            return;
+        }
+
+        var profiles = await _profiles.GetTrackedByUserIdsAsync(
+            waiting.Select(entry => entry.ReceiverId).Distinct().ToArray(),
+            cancellationToken);
+        var profilesByUser = profiles.ToDictionary(profile => profile.UserId);
+        foreach (var entry in waiting)
+        {
+            if (listing.RemainingQuantity == 0)
+            {
+                break;
+            }
+
+            if (!profilesByUser.TryGetValue(entry.ReceiverId, out var profile) || !profile.IsApproved)
+            {
+                continue;
+            }
+
+            if (profile.BlockedUntil is DateTime blockedUntil && blockedUntil > _clock.UtcNow)
+            {
+                continue;
+            }
+
+            var maxUnits = _policies.For(profile.ReceiverType).MaxUnitsPerRequest;
+            var grant = Math.Min(entry.RequestedQuantity, Math.Min(maxUnits, listing.RemainingQuantity));
+            if (grant <= 0)
+            {
+                continue;
+            }
+
+            listing.Reserve(grant);
+            var pickupCode = NewPickupCode();
+            await _reservations.AddAsync(
+                new Reservation(listing.Id, entry.ReceiverId, claimRequestId: null, grant, pickupCode, ReservationSource.Waitlist),
+                cancellationToken);
+            entry.Promote();
+            await _notifications.AddAsync(
+                new UserNotification(
+                    entry.ReceiverId,
+                    $"{listing.Title}: {grant} {(grant == 1 ? "unit is" : "units are")} ready. Pickup code {pickupCode}. If you miss this waitlist offer, your reliability score does not change.",
+                    listing.Id,
+                    _clock.UtcNow),
+                cancellationToken);
+        }
     }
 
     private static ReservationDto ToDto(Reservation reservation) =>

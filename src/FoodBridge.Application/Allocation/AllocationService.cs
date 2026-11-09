@@ -159,7 +159,13 @@ public sealed class AllocationService : IAllocationService
                 listing.Reserve(granted);
                 pickupCode = NewPickupCode();
                 await _reservations.AddAsync(
-                    new Reservation(listing.Id, item.Claim.ReceiverId, item.Claim.Id, granted, pickupCode),
+                    new Reservation(
+                        listing.Id,
+                        item.Claim.ReceiverId,
+                        item.Claim.Id,
+                        granted,
+                        pickupCode,
+                        ReservationSource.Allocation),
                     cancellationToken);
             }
 

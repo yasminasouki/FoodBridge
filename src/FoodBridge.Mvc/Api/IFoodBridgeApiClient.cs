@@ -22,6 +22,16 @@ public interface IFoodBridgeApiClient
 
     Task<CloseResult> CloseListingAsync(int listingId, CancellationToken cancellationToken = default);
 
+    Task CancelListingAsync(int listingId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AllocationGrant>> GetAllocationAsync(int listingId, CancellationToken cancellationToken = default);
+
+    Task JoinWaitlistAsync(int listingId, int quantity, CancellationToken cancellationToken = default);
+
+    Task CancelReservationAsync(int reservationId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Notice>> GetNotificationsAsync(CancellationToken cancellationToken = default);
+
     Task CollectAsync(string pickupCode, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<ImpactRow>> GetImpactAsync(

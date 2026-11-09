@@ -2,6 +2,8 @@ using FoodBridge.Application.Activity;
 using FoodBridge.Application.Allocation;
 using FoodBridge.Application.Auth;
 using FoodBridge.Application.Listings;
+using FoodBridge.Application.Notifications;
+using FoodBridge.Application.Waitlist;
 using FoodBridge.Application.Reports;
 using FoodBridge.Application.Reservations;
 using FoodBridge.Application.Persistence;
@@ -61,6 +63,11 @@ public static class DependencyInjection
         services.AddScoped<IListingRepository, ListingRepository>();
         services.AddScoped<IClaimRequestRepository, ClaimRequestRepository>();
         services.AddScoped<IReservationRepository, ReservationRepository>();
+        services.AddScoped<IWaitlistRepository, WaitlistRepository>();
+        services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
+        services.AddScoped<IWaitlistService, WaitlistService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IAllocationGrantQuery, AllocationGrantQuery>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         return services;

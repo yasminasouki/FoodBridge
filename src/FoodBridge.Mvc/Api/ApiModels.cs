@@ -88,6 +88,22 @@ public sealed record PendingApproval(
     string Kind,
     string Name);
 
+public sealed record AllocationGrant(
+    int RequestId,
+    string ReceiverName,
+    int RequestedQuantity,
+    int GrantedQuantity,
+    int PriorityScore,
+    string Status,
+    string? PickupCode);
+
+public sealed record Notice(
+    int Id,
+    string Message,
+    int? ListingId,
+    DateTime CreatedAt,
+    bool IsRead);
+
 public sealed record ImpactRow(
     int ShopId,
     string ShopName,

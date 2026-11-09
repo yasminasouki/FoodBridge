@@ -32,4 +32,25 @@ public sealed class ActivityController : Controller
             return View(new Activity(null, null, null, [], []));
         }
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancel(int id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _api.CancelReservationAsync(id, cancellationToken);
+            TempData["Message"] = "Reservation cancelled. The food is available again.";
+        }
+        catch (ApiException exception)
+        {
+            TempData["Error"] = exception.Message;
+        }
+        catch (HttpRequestException)
+        {
+            TempData["Error"] = "The FoodBridge API is not running.";
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
 }

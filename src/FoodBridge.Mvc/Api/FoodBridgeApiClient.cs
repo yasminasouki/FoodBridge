@@ -83,6 +83,38 @@ public sealed class FoodBridgeApiClient : IFoodBridgeApiClient
         return await ReadAsync<CloseResult>(response, cancellationToken);
     }
 
+    public async Task CancelListingAsync(int listingId, CancellationToken cancellationToken = default)
+    {
+        var response = await _http.DeleteAsync($"/api/listings/{listingId}", cancellationToken);
+        await EnsureSuccessAsync(response);
+    }
+
+    public Task<IReadOnlyList<AllocationGrant>> GetAllocationAsync(int listingId, CancellationToken cancellationToken = default)
+    {
+        return GetAsync<IReadOnlyList<AllocationGrant>>($"/api/listings/{listingId}/allocation", cancellationToken);
+    }
+
+    public async Task JoinWaitlistAsync(int listingId, int quantity, CancellationToken cancellationToken = default)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"/api/listings/{listingId}/waitlist",
+            new { quantity },
+            Json,
+            cancellationToken);
+        await EnsureSuccessAsync(response);
+    }
+
+    public async Task CancelReservationAsync(int reservationId, CancellationToken cancellationToken = default)
+    {
+        var response = await _http.DeleteAsync($"/api/reservations/{reservationId}", cancellationToken);
+        await EnsureSuccessAsync(response);
+    }
+
+    public Task<IReadOnlyList<Notice>> GetNotificationsAsync(CancellationToken cancellationToken = default)
+    {
+        return GetAsync<IReadOnlyList<Notice>>("/api/me/notifications", cancellationToken);
+    }
+
     public async Task CollectAsync(string pickupCode, CancellationToken cancellationToken = default)
     {
         var response = await _http.PostAsJsonAsync(

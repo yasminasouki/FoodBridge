@@ -28,6 +28,10 @@ public sealed class AppDbContext : IdentityDbContext<AppUser>
 
     public DbSet<ReceiverProfile> ReceiverProfiles => Set<ReceiverProfile>();
 
+    public DbSet<WaitlistEntry> WaitlistEntries => Set<WaitlistEntry>();
+
+    public DbSet<UserNotification> UserNotifications => Set<UserNotification>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

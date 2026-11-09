@@ -1,3 +1,5 @@
+using FoodBridge.Application.Allocation;
+
 namespace FoodBridge.Application.Listings;
 
 public interface IListingService
@@ -21,6 +23,11 @@ public interface IListingService
     Task CancelAsync(string userId, int id, CancellationToken cancellationToken = default);
 
     Task<CloseListingResultDto> CloseAsync(string userId, int id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AllocationGrantDto>> GetGrantsAsync(
+        string userId,
+        int id,
+        CancellationToken cancellationToken = default);
 }
 
 public interface ILookupService

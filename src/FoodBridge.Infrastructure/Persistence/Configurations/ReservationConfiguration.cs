@@ -1,4 +1,5 @@
 using FoodBridge.Domain.Entities;
+using FoodBridge.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -11,6 +12,10 @@ public sealed class ReservationConfiguration : IEntityTypeConfiguration<Reservat
         builder.Property(reservation => reservation.ReceiverId).HasMaxLength(450).IsRequired();
         builder.Property(reservation => reservation.PickupCode).HasMaxLength(32).IsRequired();
         builder.Property(reservation => reservation.Status).HasConversion<string>().HasMaxLength(20);
+        builder.Property(reservation => reservation.Source)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(ReservationSource.Direct);
 
         builder.HasIndex(reservation => reservation.PickupCode).IsUnique();
         builder.HasIndex(reservation => reservation.ClaimRequestId).IsUnique();

@@ -11,6 +11,7 @@ public sealed class Reservation : AuditableEntity
     public int? ClaimRequestId { get; private set; }
     public int Quantity { get; private set; }
     public string PickupCode { get; private set; } = string.Empty;
+    public ReservationSource Source { get; private set; } = ReservationSource.Direct;
     public ReservationStatus Status { get; private set; } = ReservationStatus.Pending;
     public DateTime? CollectedAt { get; private set; }
 
@@ -23,7 +24,8 @@ public sealed class Reservation : AuditableEntity
         string receiverId,
         int? claimRequestId,
         int quantity,
-        string pickupCode)
+        string pickupCode,
+        ReservationSource source = ReservationSource.Direct)
     {
         if (listingId <= 0)
         {
@@ -50,6 +52,7 @@ public sealed class Reservation : AuditableEntity
         ClaimRequestId = claimRequestId;
         Quantity = quantity;
         PickupCode = pickupCode.Trim();
+        Source = source;
     }
 
     public void Collect(string pickupCode, DateTime utcNow)

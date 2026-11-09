@@ -54,6 +54,13 @@ else
                                 <form asp-action="Allocate" asp-route-id="@listing.Id" method="post" class="d-inline">
                                     <button class="btn btn-sm btn-success" type="submit">Allocate</button>
                                 </form>
+                                <form asp-action="Cancel" asp-route-id="@listing.Id" method="post" class="d-inline">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Cancel</button>
+                                </form>
+                            }
+                            @if (listing.Status is "Allocated" or "Closed")
+                            {
+                                <a class="btn btn-sm btn-outline-success" asp-action="Result" asp-route-id="@listing.Id">Result</a>
                             }
                             @if (listing.Status is "Open" or "Allocated")
                             {

@@ -1,3 +1,4 @@
+using FoodBridge.Application.Allocation;
 using FoodBridge.Application.Persistence;
 using FoodBridge.Application.Security;
 using FoodBridge.Domain.Entities;
@@ -12,6 +13,8 @@ public sealed class ListingService : IListingService
     private readonly IReservationRepository _reservations;
     private readonly IReceiverProfileRepository _profiles;
     private readonly IShopRepository _shops;
+    private readonly IUserNotificationRepository _notifications;
+    private readonly IAllocationGrantQuery _grants;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClock _clock;
 
@@ -20,6 +23,8 @@ public sealed class ListingService : IListingService
         IReservationRepository reservations,
         IReceiverProfileRepository profiles,
         IShopRepository shops,
+        IUserNotificationRepository notifications,
+        IAllocationGrantQuery grants,
         IUnitOfWork unitOfWork,
         IClock clock)
     {
@@ -27,6 +32,8 @@ public sealed class ListingService : IListingService
         _reservations = reservations;
         _profiles = profiles;
         _shops = shops;
+        _notifications = notifications;
+        _grants = grants;
         _unitOfWork = unitOfWork;
         _clock = clock;
     }
@@ -149,10 +156,39 @@ public sealed class ListingService : IListingService
                 throw new NotFoundException("A receiver profile was not found.");
             }
 
+            if (reservation.Source == ReservationSource.Waitlist)
+            {
+                await _notifications.AddAsync(
+                    new UserNotification(
+                        reservation.ReceiverId,
+                        $"{listing.Title}: the pickup window ended before the waitlist offer was collected. Your reliability score was not changed.",
+                        listing.Id,
+                        _clock.UtcNow),
+                    cancellationToken);
+                continue;
+            }
+
             profile.ApplyNoShow(_clock.UtcNow);
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return new CloseListingResultDto(listing.Id, listing.Status.ToString(), pending.Count);
+    }
+
+    public async Task<IReadOnlyList<AllocationGrantDto>> GetGrantsAsync(
+        string userId,
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var shop = await _shops.GetByOwnerAsync(userId, cancellationToken)
+            ?? throw new ForbiddenException("Only a shop can see an allocation result.");
+        var listing = await _listings.GetByIdAsync(id, cancellationToken)
+            ?? throw new NotFoundException("Listing was not found.");
+        if (listing.ShopId != shop.Id)
+        {
+            throw new ForbiddenException("You can only see your own listings.");
+        }
+
+        return await _grants.ListAsync(id, cancellationToken);
     }
 }

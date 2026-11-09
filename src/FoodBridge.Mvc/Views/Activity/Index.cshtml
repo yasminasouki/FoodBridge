@@ -75,6 +75,7 @@ else
                     <th>Quantity</th>
                     <th>Code</th>
                     <th>Status</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -85,6 +86,14 @@ else
                         <td>@reservation.Quantity</td>
                         <td class="pickup-code">@reservation.PickupCode</td>
                         <td>@reservation.Status</td>
+                        <td>
+                            @if (reservation.Status == "Pending")
+                            {
+                                <form asp-action="Cancel" asp-route-id="@reservation.Id" method="post">
+                                    <button class="btn btn-sm btn-outline-secondary" type="submit">Cancel</button>
+                                </form>
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>

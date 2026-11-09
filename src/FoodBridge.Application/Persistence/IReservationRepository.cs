@@ -14,4 +14,6 @@ public interface IReservationRepository : IRepository<Reservation>
     Task<IReadOnlyList<Reservation>> ListPendingForListingAsync(
         int listingId,
         CancellationToken cancellationToken = default);
+
+    Task<bool> HasPendingAsync(int listingId, string receiverId, CancellationToken cancellationToken = default);
 }

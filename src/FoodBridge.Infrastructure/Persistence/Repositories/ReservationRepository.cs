@@ -53,4 +53,14 @@ public sealed class ReservationRepository : Repository<Reservation>, IReservatio
             .Where(reservation => reservation.ListingId == listingId && reservation.Status == ReservationStatus.Pending)
             .ToListAsync(cancellationToken);
     }
+
+    public Task<bool> HasPendingAsync(int listingId, string receiverId, CancellationToken cancellationToken = default)
+    {
+        return _context.Reservations.AnyAsync(
+            reservation =>
+                reservation.ListingId == listingId &&
+                reservation.ReceiverId == receiverId &&
+                reservation.Status == ReservationStatus.Pending,
+            cancellationToken);
+    }
 }
