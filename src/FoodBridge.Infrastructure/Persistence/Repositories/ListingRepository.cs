@@ -113,8 +113,14 @@ public sealed class ListingRepository : Repository<Listing>, IListingRepository
         else
         {
             query = query.Where(listing =>
-                listing.Status == ListingStatus.Open &&
-                listing.RequestWindowEndsAt > search.UtcNow);
+                (listing.Status == ListingStatus.Open &&
+                    listing.RequestWindowEndsAt > search.UtcNow)
+                || (listing.Status == ListingStatus.Allocated
+                    && listing.PickupUntil > search.UtcNow
+                    && (listing.RemainingQuantity > 0
+                        || _context.Reservations.Any(reservation =>
+                            reservation.ListingId == listing.Id
+                            && reservation.Status == ReservationStatus.Pending))));
         }
 
         if (search.AreaId is int areaId)

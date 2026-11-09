@@ -69,7 +69,7 @@ An individual is approved at registration. A shop or an NGO cannot post or reque
 
 ## What each role does
 
-A visitor can browse open listings whose request window is still in the future, and can filter by area and category.
+A visitor can browse open listings whose request window is still in the future, and can filter by area and category. An allocated listing stays on that page until the reserved food is collected or the pickup window ends, so a person can open it and join the waitlist.
 
 A receiver or an approved NGO can request food while the listing is open. An individual can ask for at most 2 units. An NGO can ask for at most 10. One account can request a listing only once. After the shop allocates, any food that is left can be reserved directly until the pickup window ends. My Activity shows the requests, the pickup codes, and the reliability score.
 
