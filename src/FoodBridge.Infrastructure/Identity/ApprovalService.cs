@@ -1,4 +1,5 @@
 using FoodBridge.Application.Auth;
+using FoodBridge.Application.Notifications;
 using FoodBridge.Domain.Enums;
 using FoodBridge.Domain.Exceptions;
 using FoodBridge.Infrastructure.Persistence;
@@ -9,10 +10,12 @@ namespace FoodBridge.Infrastructure.Identity;
 public sealed class ApprovalService : IApprovalService
 {
     private readonly AppDbContext _context;
+    private readonly IUserNotifier _notifier;
 
-    public ApprovalService(AppDbContext context)
+    public ApprovalService(AppDbContext context, IUserNotifier notifier)
     {
         _context = context;
+        _notifier = notifier;
     }
 
     public async Task<IReadOnlyList<PendingApprovalResponse>> GetPendingAsync(
@@ -67,6 +70,11 @@ public sealed class ApprovalService : IApprovalService
 
         shop?.Approve();
         ngo?.Approve();
+        var message = shop is null
+            ? "An admin approved your account. You can request food now."
+            : $"An admin approved {shop.Name}. You can post food now.";
+        await _notifier.NotifyAsync(userId, message, null, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
+        await _notifier.PushQueuedAsync(cancellationToken);
     }
 }

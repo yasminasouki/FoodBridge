@@ -27,6 +27,41 @@ body {
   background: #1f6b4a;
 }
 
+#live-notices {
+  z-index: 1080;
+}
+
+.notice-bell {
+  position: relative;
+  color: #fff;
+  background: transparent;
+  border: 0;
+}
+
+.notice-bell #notice-count {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.15rem;
+  font-size: 0.65rem;
+}
+
+.notice-menu {
+  width: min(22rem, 90vw);
+  max-height: 22rem;
+  overflow: auto;
+}
+
+.notice-item {
+  white-space: normal;
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid #eee;
+}
+
+.notice-item.unread {
+  background: #eef6f1;
+}
+
 .page-heading h1,
 h1 {
   font-weight: 650;

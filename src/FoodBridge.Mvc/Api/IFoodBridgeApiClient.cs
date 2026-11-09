@@ -32,6 +32,8 @@ public interface IFoodBridgeApiClient
 
     Task<IReadOnlyList<Notice>> GetNotificationsAsync(CancellationToken cancellationToken = default);
 
+    Task<Notice> MarkNotificationReadAsync(int id, CancellationToken cancellationToken = default);
+
     Task CollectAsync(string pickupCode, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<ImpactRow>> GetImpactAsync(

@@ -97,5 +97,8 @@ public class ImpactReportServiceTests
 
         public Task<Shop?> GetByOwnerAsync(string ownerUserId, CancellationToken cancellationToken = default) =>
             Task.FromResult(_shop);
+
+        public Task<string?> GetOwnerUserIdAsync(int shopId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(_shop?.OwnerUserId);
     }
 }

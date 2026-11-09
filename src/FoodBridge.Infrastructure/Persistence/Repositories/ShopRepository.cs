@@ -17,4 +17,13 @@ public sealed class ShopRepository : IShopRepository
     {
         return _context.Shops.FirstOrDefaultAsync(shop => shop.OwnerUserId == ownerUserId, cancellationToken);
     }
+
+    public Task<string?> GetOwnerUserIdAsync(int shopId, CancellationToken cancellationToken = default)
+    {
+        return _context.Shops
+            .AsNoTracking()
+            .Where(shop => shop.Id == shopId)
+            .Select(shop => shop.OwnerUserId)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
 }

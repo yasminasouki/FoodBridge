@@ -1,5 +1,6 @@
 using FoodBridge.Application.Persistence;
 using FoodBridge.Application.Security;
+using FoodBridge.Domain.Exceptions;
 
 namespace FoodBridge.Application.Notifications;
 
@@ -16,23 +17,29 @@ public sealed class NotificationService : INotificationService
         _clock = clock;
     }
 
-    public async Task<IReadOnlyList<NotificationDto>> ListAndMarkReadAsync(
+    public async Task<IReadOnlyList<NotificationDto>> ListAsync(
         string userId,
         CancellationToken cancellationToken = default)
     {
         var items = await _notifications.ListForUserAsync(userId, cancellationToken);
-        foreach (var item in items)
-        {
-            item.MarkRead(_clock.UtcNow);
-        }
-
-        if (items.Count > 0)
-        {
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-        }
-
         return items
             .Select(item => new NotificationDto(item.Id, item.Message, item.ListingId, item.CreatedAt, item.ReadAt is not null))
             .ToList();
+    }
+
+    public async Task<NotificationDto> MarkReadAsync(
+        string userId,
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var notice = await _notifications.GetByIdAsync(id, cancellationToken);
+        if (notice is null || notice.UserId != userId)
+        {
+            throw new NotFoundException("That notification was not found.");
+        }
+
+        notice.MarkRead(_clock.UtcNow);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return new NotificationDto(notice.Id, notice.Message, notice.ListingId, notice.CreatedAt, true);
     }
 }

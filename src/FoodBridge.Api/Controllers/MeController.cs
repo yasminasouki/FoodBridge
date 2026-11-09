@@ -47,6 +47,20 @@ public sealed class MeController : ControllerBase
             throw new UnauthorizedException("Log in to see your updates.");
         }
 
-        return Ok(await _notifications.ListAndMarkReadAsync(_currentUser.UserId, cancellationToken));
+        return Ok(await _notifications.ListAsync(_currentUser.UserId, cancellationToken));
+    }
+
+    [Authorize]
+    [HttpPost("notifications/{id:int}/read")]
+    [ProducesResponseType(typeof(NotificationDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<NotificationDto>> MarkRead(int id, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(_currentUser.UserId))
+        {
+            throw new UnauthorizedException("Log in to see your updates.");
+        }
+
+        return Ok(await _notifications.MarkReadAsync(_currentUser.UserId, id, cancellationToken));
     }
 }

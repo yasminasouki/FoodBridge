@@ -1,3 +1,4 @@
+using FoodBridge.Application.Notifications;
 using FoodBridge.Application.Persistence;
 using FoodBridge.Domain.Exceptions;
 using Microsoft.Data.SqlClient;
@@ -8,14 +9,17 @@ namespace FoodBridge.Infrastructure.Persistence;
 public sealed class UnitOfWork : IUnitOfWork
 {
     private readonly AppDbContext _context;
+    private readonly IUserNotifier _notifier;
 
     public UnitOfWork(
         AppDbContext context,
+        IUserNotifier notifier,
         IListingRepository listings,
         IClaimRequestRepository claimRequests,
         IReservationRepository reservations)
     {
         _context = context;
+        _notifier = notifier;
         Listings = listings;
         ClaimRequests = claimRequests;
         Reservations = reservations;
@@ -31,7 +35,9 @@ public sealed class UnitOfWork : IUnitOfWork
     {
         try
         {
-            return await _context.SaveChangesAsync(cancellationToken);
+            var saved = await _context.SaveChangesAsync(cancellationToken);
+            await _notifier.PushQueuedAsync(cancellationToken);
+            return saved;
         }
         catch (DbUpdateConcurrencyException)
         {

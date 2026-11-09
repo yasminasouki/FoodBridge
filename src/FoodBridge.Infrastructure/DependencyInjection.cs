@@ -10,6 +10,7 @@ using FoodBridge.Application.Persistence;
 using FoodBridge.Application.Security;
 using FoodBridge.Domain.Allocation;
 using FoodBridge.Infrastructure.Identity;
+using FoodBridge.Infrastructure.Notifications;
 using FoodBridge.Infrastructure.Persistence;
 using FoodBridge.Infrastructure.Persistence.Repositories;
 using Microsoft.AspNetCore.Identity;
@@ -65,6 +66,9 @@ public static class DependencyInjection
         services.AddScoped<IReservationRepository, ReservationRepository>();
         services.AddScoped<IWaitlistRepository, WaitlistRepository>();
         services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
+        services.AddSingleton<ILiveNotifier, NoLiveNotifier>();
+        services.AddScoped<IUserNotifier, UserNotifier>();
+        services.AddScoped<IAccountNameQuery, AccountNameQuery>();
         services.AddScoped<IWaitlistService, WaitlistService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IAllocationGrantQuery, AllocationGrantQuery>();

@@ -1,11 +1,14 @@
 using System.Text;
 using FoodBridge.Api.Authorization;
 using FoodBridge.Api.Exceptions;
+using FoodBridge.Api.Notifications;
 using FoodBridge.Api.Security;
+using FoodBridge.Application.Notifications;
 using FoodBridge.Application.Security;
 using FoodBridge.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 
@@ -47,7 +50,33 @@ public static class DependencyInjection
                     NameClaimType = "name",
                     ClockSkew = TimeSpan.FromMinutes(1)
                 };
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        if (!string.IsNullOrEmpty(accessToken)
+                            && context.HttpContext.Request.Path.StartsWithSegments("/hubs/notifications"))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
             });
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy("Website", policy =>
+                policy.WithOrigins("http://localhost:5011", "https://localhost:7151")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials());
+        });
+        services.AddSignalR();
+        services.AddSingleton<IUserIdProvider, SubUserIdProvider>();
+        services.AddSingleton<ILiveNotifier, SignalRLiveNotifier>();
 
         services.AddAuthorization(options =>
         {
@@ -95,9 +124,11 @@ public static class DependencyInjection
         }
 
         app.UseHttpsRedirection();
+        app.UseCors("Website");
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();
+        app.MapHub<NotificationsHub>("/hubs/notifications");
         return app;
     }
 }

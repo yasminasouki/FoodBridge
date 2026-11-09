@@ -1,4 +1,5 @@
 using FoodBridge.Application.Allocation;
+using FoodBridge.Application.Notifications;
 using FoodBridge.Application.Persistence;
 using FoodBridge.Application.Security;
 using FoodBridge.Domain.Entities;
@@ -13,7 +14,7 @@ public sealed class ListingService : IListingService
     private readonly IReservationRepository _reservations;
     private readonly IReceiverProfileRepository _profiles;
     private readonly IShopRepository _shops;
-    private readonly IUserNotificationRepository _notifications;
+    private readonly IUserNotifier _notifier;
     private readonly IAllocationGrantQuery _grants;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClock _clock;
@@ -23,7 +24,7 @@ public sealed class ListingService : IListingService
         IReservationRepository reservations,
         IReceiverProfileRepository profiles,
         IShopRepository shops,
-        IUserNotificationRepository notifications,
+        IUserNotifier notifier,
         IAllocationGrantQuery grants,
         IUnitOfWork unitOfWork,
         IClock clock)
@@ -32,7 +33,7 @@ public sealed class ListingService : IListingService
         _reservations = reservations;
         _profiles = profiles;
         _shops = shops;
-        _notifications = notifications;
+        _notifier = notifier;
         _grants = grants;
         _unitOfWork = unitOfWork;
         _clock = clock;
@@ -125,6 +126,16 @@ public sealed class ListingService : IListingService
         }
 
         listing.Cancel();
+        var claims = await _unitOfWork.ClaimRequests.ListPendingForListingAsync(id, cancellationToken);
+        foreach (var claim in claims)
+        {
+            await _notifier.NotifyAsync(
+                claim.ReceiverId,
+                $"{listing.Title} was cancelled. Your request will not be allocated.",
+                listing.Id,
+                cancellationToken);
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
@@ -158,17 +169,20 @@ public sealed class ListingService : IListingService
 
             if (reservation.Source == ReservationSource.Waitlist)
             {
-                await _notifications.AddAsync(
-                    new UserNotification(
-                        reservation.ReceiverId,
-                        $"{listing.Title}: the pickup window ended before the waitlist offer was collected. Your reliability score was not changed.",
-                        listing.Id,
-                        _clock.UtcNow),
+                await _notifier.NotifyAsync(
+                    reservation.ReceiverId,
+                    $"{listing.Title}: the pickup window ended before the waitlist offer was collected. Your reliability score was not changed.",
+                    listing.Id,
                     cancellationToken);
                 continue;
             }
 
             profile.ApplyNoShow(_clock.UtcNow);
+            await _notifier.NotifyAsync(
+                reservation.ReceiverId,
+                $"{listing.Title}: the pickup window ended before collection. This counts as a no-show.",
+                listing.Id,
+                cancellationToken);
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

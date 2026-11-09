@@ -28,3 +28,5 @@ I ran the unit tests and walked the website with the demo accounts.
 The local database also contains listings I created while testing. A fresh database gets the demo users and one Evening bread listing.
 
 A waitlist was added after the first version. It offers released food only when a reservation is cancelled, and it tells the person on the website. A missed waitlist offer does not change the reliability score. There is still no background worker, no email, and no phone message.
+
+Approvals, requests, allocations, cancellations, waitlist changes, pickups, and no-shows also write a notification. The bell in the bar lists them, and pressing one opens the food. If that person has the website open, the message appears on the page immediately.

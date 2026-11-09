@@ -1,3 +1,4 @@
+using FoodBridge.Application.Notifications;
 using FoodBridge.Application.Persistence;
 using FoodBridge.Application.Security;
 using FoodBridge.Domain.Allocation;
@@ -15,6 +16,8 @@ public sealed class AllocationService : IAllocationService
     private readonly IReceiverProfileRepository _profiles;
     private readonly IShopRepository _shops;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IUserNotifier _notifier;
+    private readonly IAccountNameQuery _names;
     private readonly IClock _clock;
     private readonly IAllocationStrategy _allocator;
     private readonly IEnumerable<IPriorityRule> _rules;
@@ -27,6 +30,8 @@ public sealed class AllocationService : IAllocationService
         IReceiverProfileRepository profiles,
         IShopRepository shops,
         IUnitOfWork unitOfWork,
+        IUserNotifier notifier,
+        IAccountNameQuery names,
         IClock clock,
         IAllocationStrategy allocator,
         IEnumerable<IPriorityRule> rules,
@@ -38,6 +43,8 @@ public sealed class AllocationService : IAllocationService
         _profiles = profiles;
         _shops = shops;
         _unitOfWork = unitOfWork;
+        _notifier = notifier;
+        _names = names;
         _clock = clock;
         _allocator = allocator;
         _rules = rules;
@@ -87,6 +94,17 @@ public sealed class AllocationService : IAllocationService
 
         var claim = new ClaimRequest(listingId, userId, quantity);
         await _claims.AddAsync(claim, cancellationToken);
+        var ownerId = await _shops.GetOwnerUserIdAsync(listing.ShopId, cancellationToken);
+        if (!string.IsNullOrWhiteSpace(ownerId))
+        {
+            var name = await _names.GetFullNameAsync(userId, cancellationToken);
+            await _notifier.NotifyAsync(
+                ownerId,
+                $"{name} requested {quantity} {(quantity == 1 ? "unit" : "units")} of {listing.Title}.",
+                listing.Id,
+                cancellationToken);
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return new ClaimRequestDto(claim.Id, claim.ListingId, claim.RequestedQuantity, claim.Status.ToString());
     }
@@ -177,6 +195,10 @@ public sealed class AllocationService : IAllocationService
                 item.Score,
                 item.Claim.Status.ToString(),
                 pickupCode));
+            var message = granted > 0
+                ? $"{listing.Title}: you were given {granted} {(granted == 1 ? "unit" : "units")}. Pickup code {pickupCode}."
+                : $"{listing.Title}: the shop allocated the food, and your request was not selected.";
+            await _notifier.NotifyAsync(item.Claim.ReceiverId, message, listing.Id, cancellationToken);
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

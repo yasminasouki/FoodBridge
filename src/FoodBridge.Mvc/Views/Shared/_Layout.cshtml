@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -47,14 +48,24 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Activity" asp-action="Index">My Activity</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Notifications" asp-action="Index">Updates</a>
-                            </li>
                         }
                     </ul>
                     <ul class="navbar-nav">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
+                            <li class="nav-item dropdown">
+                                <button class="nav-link notice-bell dropdown-toggle" id="notice-bell" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notifications"
+                                        data-list-url="@Url.Action("List", "Notifications")"
+                                        data-open-url="@Url.Action("Open", "Notifications")/">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                                        <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2m.995-14.901a1 1 0 1 0-1.99 0A5 5 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901" />
+                                    </svg>
+                                    <span id="notice-count" class="badge rounded-pill text-bg-danger d-none">0</span>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end notice-menu" id="notice-menu">
+                                    <p class="text-muted small px-3 py-2 mb-0">No notifications yet.</p>
+                                </div>
+                            </li>
                             <li class="nav-item">
                                 <span class="navbar-text me-3">@User.Identity.Name</span>
                             </li>
@@ -94,7 +105,14 @@
     <footer class="footer text-muted">
         <div class="container">Surplus food, shared fairly. Times are shown in Lebanon time.</div>
     </footer>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div id="live-notices" class="toast-container position-fixed bottom-0 end-0 p-3"
+             data-hub="@(Configuration["FoodBridgeApi:BaseUrl"])/hubs/notifications"
+             data-token-url="@Url.Action("Token", "Notifications")"></div>
+    }
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/signalr/signalr.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)

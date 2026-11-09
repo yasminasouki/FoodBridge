@@ -1,4 +1,5 @@
 using FoodBridge.Application.Allocation;
+using FoodBridge.Application.Notifications;
 using FoodBridge.Application.Persistence;
 using FoodBridge.Application.Security;
 using FoodBridge.Domain.Entities;
@@ -14,7 +15,8 @@ public sealed class ReservationService : IReservationService
     private readonly IReceiverProfileRepository _profiles;
     private readonly IShopRepository _shops;
     private readonly IWaitlistRepository _waitlist;
-    private readonly IUserNotificationRepository _notifications;
+    private readonly IUserNotifier _notifier;
+    private readonly IAccountNameQuery _names;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClock _clock;
     private readonly ReservationPolicySelector _policies;
@@ -25,7 +27,8 @@ public sealed class ReservationService : IReservationService
         IReceiverProfileRepository profiles,
         IShopRepository shops,
         IWaitlistRepository waitlist,
-        IUserNotificationRepository notifications,
+        IUserNotifier notifier,
+        IAccountNameQuery names,
         IUnitOfWork unitOfWork,
         IClock clock,
         ReservationPolicySelector policies)
@@ -35,7 +38,8 @@ public sealed class ReservationService : IReservationService
         _profiles = profiles;
         _shops = shops;
         _waitlist = waitlist;
-        _notifications = notifications;
+        _notifier = notifier;
+        _names = names;
         _unitOfWork = unitOfWork;
         _clock = clock;
         _policies = policies;
@@ -81,6 +85,17 @@ public sealed class ReservationService : IReservationService
             NewPickupCode(),
             ReservationSource.Direct);
         await _reservations.AddAsync(reservation, cancellationToken);
+        var ownerId = await _shops.GetOwnerUserIdAsync(listing.ShopId, cancellationToken);
+        if (!string.IsNullOrWhiteSpace(ownerId))
+        {
+            var name = await _names.GetFullNameAsync(userId, cancellationToken);
+            await _notifier.NotifyAsync(
+                ownerId,
+                $"{name} reserved {quantity} leftover {(quantity == 1 ? "unit" : "units")} of {listing.Title}.",
+                listing.Id,
+                cancellationToken);
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return ToDto(reservation);
     }
@@ -103,6 +118,11 @@ public sealed class ReservationService : IReservationService
         }
 
         reservation.Collect(code, _clock.UtcNow);
+        await _notifier.NotifyAsync(
+            reservation.ReceiverId,
+            $"{listing.Title}: the shop confirmed your pickup of {reservation.Quantity} {(reservation.Quantity == 1 ? "unit" : "units")}.",
+            listing.Id,
+            cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return ToDto(reservation);
     }
@@ -125,6 +145,17 @@ public sealed class ReservationService : IReservationService
 
         reservation.Cancel();
         listing.Release(reservation.Quantity);
+        var ownerId = await _shops.GetOwnerUserIdAsync(listing.ShopId, cancellationToken);
+        if (!string.IsNullOrWhiteSpace(ownerId))
+        {
+            var name = await _names.GetFullNameAsync(userId, cancellationToken);
+            await _notifier.NotifyAsync(
+                ownerId,
+                $"{name} cancelled {reservation.Quantity} {(reservation.Quantity == 1 ? "unit" : "units")} of {listing.Title}.",
+                listing.Id,
+                cancellationToken);
+        }
+
         await OfferReleasedFoodAsync(listing, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
@@ -171,12 +202,10 @@ public sealed class ReservationService : IReservationService
                 new Reservation(listing.Id, entry.ReceiverId, claimRequestId: null, grant, pickupCode, ReservationSource.Waitlist),
                 cancellationToken);
             entry.Promote();
-            await _notifications.AddAsync(
-                new UserNotification(
-                    entry.ReceiverId,
-                    $"{listing.Title}: {grant} {(grant == 1 ? "unit is" : "units are")} ready. Pickup code {pickupCode}. If you miss this waitlist offer, your reliability score does not change.",
-                    listing.Id,
-                    _clock.UtcNow),
+            await _notifier.NotifyAsync(
+                entry.ReceiverId,
+                $"{listing.Title}: {grant} {(grant == 1 ? "unit is" : "units are")} ready. Pickup code {pickupCode}. If you miss this waitlist offer, your reliability score does not change.",
+                listing.Id,
                 cancellationToken);
         }
     }

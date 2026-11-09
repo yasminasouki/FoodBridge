@@ -71,7 +71,7 @@ else if (canClaim && Model.Status == "Allocated" && Model.RemainingQuantity == 0
     <form asp-action="JoinWaitlist" asp-route-id="@Model.Id" method="post" class="card listing-card mt-3">
         <div class="card-body">
             <h2 class="h5">Join the waitlist</h2>
-            <p class="text-muted">If someone cancels, the next person is offered the food on Updates. Missing that offer does not lower your reliability score.</p>
+            <p class="text-muted">If someone cancels, the next person gets a notification. Press it to open this food. Missing that offer does not lower your reliability score.</p>
             <div class="row g-2 align-items-end">
                 <div class="col-sm-4">
                     <label class="form-label" for="quantity">Quantity</label>

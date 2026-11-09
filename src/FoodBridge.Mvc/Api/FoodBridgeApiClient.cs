@@ -115,6 +115,12 @@ public sealed class FoodBridgeApiClient : IFoodBridgeApiClient
         return GetAsync<IReadOnlyList<Notice>>("/api/me/notifications", cancellationToken);
     }
 
+    public async Task<Notice> MarkNotificationReadAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var response = await _http.PostAsync($"/api/me/notifications/{id}/read", null, cancellationToken);
+        return await ReadAsync<Notice>(response, cancellationToken);
+    }
+
     public async Task CollectAsync(string pickupCode, CancellationToken cancellationToken = default)
     {
         var response = await _http.PostAsJsonAsync(

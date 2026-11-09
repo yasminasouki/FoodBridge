@@ -97,7 +97,7 @@ A no-show subtracts 20 from the reliability score. The account is blocked for 3 
 
 Nothing allocates or closes a listing unless the shop presses the button. There is no background worker. If the shop never comes back, open requests stay open and uncollected reservations are not marked as no-shows.
 
-A sold-out listing has a waitlist. Food is offered to the next person only when someone cancels a reservation, in the same save. The offer appears under Updates on the website. FoodBridge does not send email, SMS, or push messages. A missed waitlist offer does not change the reliability score, because the person may not have seen the update in time. A normal reservation still loses 20 points if it is still pending when the shop closes the listing after the pickup window.
+A sold-out listing has a waitlist. Food is offered to the next person only when someone cancels a reservation, in the same save. The offer appears on the notification bell. Pressing it opens the food. If that account has a FoodBridge page open, the same message also appears there immediately. The same live notice is sent for an approval, a request, an allocation, a cancellation, a waitlist change, a pickup, and a no-show. FoodBridge does not send email, SMS, or phone push messages. A missed waitlist offer does not change the reliability score, because the person may not have seen the update in time. A normal reservation still loses 20 points if it is still pending when the shop closes the listing after the pickup window.
 
 A listing can be closed only when the current time is at or after the end of the pickup window. Closing earlier returns 409. Pending reservations become no-shows only at that moment.
 

@@ -108,7 +108,7 @@ public sealed class ListingsController : Controller
 
         await SendAsync(
             () => _api.JoinWaitlistAsync(id, form.Quantity, cancellationToken),
-            "You are on the waitlist. If food is released, the update appears under Updates.");
+            "You are on the waitlist. If food is released, it appears on the bell.");
         return RedirectToAction(nameof(Details), new { id });
     }
 
