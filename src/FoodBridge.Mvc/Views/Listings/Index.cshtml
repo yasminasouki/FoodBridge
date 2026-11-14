@@ -3,9 +3,12 @@
     ViewData["Title"] = "Listings";
 }
 
-<section class="page-heading">
-    <h1>Food available now</h1>
-    <p>Shops post what they cannot sell. Request it before the window ends. Sold-out food stays here until it is collected, so you can join the waitlist.</p>
+<section class="listings-intro">
+    <div>
+        <h1>Food available now</h1>
+        <p>Request it before the window ends. Sold-out food stays here until someone collects it.</p>
+    </div>
+    <p class="listings-count">@Model.Listings.TotalCount @(Model.Listings.TotalCount == 1 ? "listing" : "listings")</p>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(Model.Error))
@@ -13,7 +16,7 @@
     <div class="alert alert-danger">@Model.Error</div>
 }
 
-<form method="get" class="row g-2 align-items-end mb-4">
+<form method="get" class="filter-bar row g-2 align-items-end" aria-label="Filter listings">
     <div class="col-sm-4">
         <label class="form-label" for="areaId">Area</label>
         <select class="form-select" id="areaId" name="areaId">
@@ -55,7 +58,15 @@
 
 @if (Model.Listings.Items.Count == 0)
 {
-    <p class="text-muted">No open listings match this filter.</p>
+    <div class="empty-state text-center">
+        <div class="empty-icon" aria-hidden="true">&#127811;</div>
+        <h2 class="h5">Nothing here right now</h2>
+        <p class="mb-3">No open listings match this filter. Try a different area or category.</p>
+        @if (Model.AreaId != null || Model.CategoryId != null)
+        {
+            <a class="btn btn-outline-success btn-sm" asp-action="Index">Clear filters</a>
+        }
+    </div>
 }
 else
 {
@@ -68,7 +79,8 @@ else
         }
     </div>
 
-    <nav class="mt-4" aria-label="Pages">
+    <nav class="page-nav mt-4" aria-label="Pages">
+        <span class="page-status">Page @Model.Page of @Math.Max(1, (int)Math.Ceiling(Model.Listings.TotalCount / (double)Math.Max(1, Model.Listings.PageSize)))</span>
         @if (Model.Page > 1)
         {
             <a class="btn btn-outline-secondary" asp-action="Index" asp-route-areaId="@Model.AreaId" asp-route-categoryId="@Model.CategoryId" asp-route-page="@(Model.Page - 1)">Previous</a>

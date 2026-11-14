@@ -1,5 +1,9 @@
 @{
     ViewData["Title"] = "Listing not found";
 }
-<h1>That listing was not found</h1>
-<p><a asp-action="Index">Back to listings</a></p>
+<section class="status-page">
+    <div class="status-icon" aria-hidden="true">&#128269;</div>
+    <h1>That listing was not found</h1>
+    <p>It may have been cancelled, or the link is out of date. Fresh food is posted all the time.</p>
+    <a class="btn btn-success" asp-action="Index">Browse listings</a>
+</section>

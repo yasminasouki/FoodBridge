@@ -1,11 +1,19 @@
 @model ImpactQuery
 @{
     ViewData["Title"] = "Impact";
+    var totalKilos = Model.Rows.Sum(r => r.KilosSaved);
+    var totalCollected = Model.Rows.Sum(r => r.CollectedUnits);
+    var totalNoShow = Model.Rows.Sum(r => r.NoShowUnits);
+    var settled = totalCollected + totalNoShow;
+    var overallRate = settled == 0 ? 0m : (decimal)totalCollected / settled;
+    string Pct(decimal rate) => (rate * 100m).ToString("0.#") + "%";
 }
 
-<h1>Impact report</h1>
-<p class="text-muted">The end date is included. Kilos are collected units times the weight of each unit.</p>
-<form method="get" class="row g-2 align-items-end mb-4">
+<section class="page-heading">
+    <h1>Impact report</h1>
+    <p>The end date is included. Kilos are collected units times the weight of each unit.</p>
+</section>
+<form method="get" class="filter-bar row g-2 align-items-end" aria-label="Report range">
     <div class="col-sm-3">
         <label class="form-label" asp-for="From"></label>
         <input class="form-control" asp-for="From" type="date" />
@@ -38,38 +46,68 @@
         <button class="btn btn-success" type="submit">Show</button>
     </div>
 </form>
-<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
 
 @if (Model.Rows.Count == 0)
 {
-    <p class="text-muted">No collected or missed pickups in this range.</p>
+    <div class="empty-state text-center">
+        <div class="empty-icon" aria-hidden="true">&#128202;</div>
+        <h2 class="h5">No data for this range</h2>
+        <p class="mb-0">No collected or missed pickups between these dates. Try a wider range.</p>
+    </div>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table">
+    <div class="stat-tiles">
+        <div class="stat-tile stat-feature">
+            <span class="stat-label">Kilos saved</span>
+            <span class="stat-value">@totalKilos.ToString("0.#")</span>
+            <span class="stat-note">kg kept out of the bin</span>
+        </div>
+        <div class="stat-tile">
+            <span class="stat-label">Units collected</span>
+            <span class="stat-value">@totalCollected</span>
+        </div>
+        <div class="stat-tile">
+            <span class="stat-label">No-shows</span>
+            <span class="stat-value">@totalNoShow</span>
+        </div>
+        <div class="stat-tile">
+            <span class="stat-label">Collection rate</span>
+            <span class="stat-value">@Pct(overallRate)</span>
+        </div>
+    </div>
+
+    <div class="table-responsive table-wrap">
+        <table class="table data-table">
             <thead>
                 <tr>
                     <th>Shop</th>
                     <th>Area</th>
-                    <th>Kilos saved</th>
-                    <th>Collected</th>
-                    <th>No-shows</th>
+                    <th class="text-end">Kilos saved</th>
+                    <th class="text-end">Collected</th>
+                    <th class="text-end">No-shows</th>
                     <th>Collection rate</th>
-                    <th>No-show rate</th>
+                    <th class="text-end">No-show rate</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var row in Model.Rows)
                 {
+                    var width = (int)Math.Round(Math.Clamp(row.CollectionRate, 0m, 1m) * 100m);
                     <tr>
-                        <td>@row.ShopName</td>
+                        <td><strong>@row.ShopName</strong></td>
                         <td>@row.AreaName</td>
-                        <td>@row.KilosSaved.ToString("0.###")</td>
-                        <td>@row.CollectedUnits</td>
-                        <td>@row.NoShowUnits</td>
-                        <td>@row.CollectionRate.ToString("0.##")</td>
-                        <td>@row.NoShowRate.ToString("0.##")</td>
+                        <td class="text-end">@row.KilosSaved.ToString("0.###")</td>
+                        <td class="text-end">@row.CollectedUnits</td>
+                        <td class="text-end">@row.NoShowUnits</td>
+                        <td>
+                            <div class="rate-cell">
+                                <div class="meter meter-sm" role="img" aria-label="Collection rate @Pct(row.CollectionRate)"><span class="meter-fill" style="width:@(width)%"></span></div>
+                                <span>@Pct(row.CollectionRate)</span>
+                            </div>
+                        </td>
+                        <td class="text-end">@Pct(row.NoShowRate)</td>
                     </tr>
                 }
             </tbody>

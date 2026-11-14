@@ -11,6 +11,7 @@ namespace FoodBridge.Mvc.Controllers;
 
 public sealed class AccountController : Controller
 {
+    private const string RememberedEmailCookie = "FoodBridge.Email";
     private readonly IFoodBridgeApiClient _api;
 
     public AccountController(IFoodBridgeApiClient api)
@@ -27,7 +28,13 @@ public sealed class AccountController : Controller
     [HttpGet]
     public IActionResult Login(string? returnUrl)
     {
-        return View(new LoginViewModel { ReturnUrl = returnUrl });
+        var rememberedEmail = Request.Cookies[RememberedEmailCookie];
+        return View(new LoginViewModel
+        {
+            ReturnUrl = returnUrl,
+            Email = rememberedEmail ?? string.Empty,
+            RememberMe = !string.IsNullOrWhiteSpace(rememberedEmail)
+        });
     }
 
     [HttpPost]
@@ -43,6 +50,7 @@ public sealed class AccountController : Controller
         {
             var result = await _api.LoginAsync(model.Email, model.Password, cancellationToken);
             await SignInAsync(result.Token);
+            RememberEmail(model);
         }
         catch (ApiException exception)
         {
@@ -137,6 +145,23 @@ public sealed class AccountController : Controller
         {
             return [];
         }
+    }
+
+    private void RememberEmail(LoginViewModel model)
+    {
+        if (!model.RememberMe)
+        {
+            Response.Cookies.Delete(RememberedEmailCookie);
+            return;
+        }
+
+        Response.Cookies.Append(RememberedEmailCookie, model.Email.Trim(), new CookieOptions
+        {
+            Expires = DateTimeOffset.UtcNow.AddDays(30),
+            HttpOnly = true,
+            IsEssential = true,
+            SameSite = SameSiteMode.Lax
+        });
     }
 
     private async Task SignInAsync(string token)

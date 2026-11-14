@@ -1,52 +1,71 @@
 ﻿@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    bool IsHere(string controller, string action) => string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase)
+        && (action is null || string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase));
+    string NavClass(string controller, string action = null) => IsHere(controller, action) ? "nav-link active" : "nav-link";
+    string NavCurrent(string controller, string action = null) => IsHere(controller, action) ? "page" : null;
+    var profileName = User.Identity?.Name ?? "";
+    var profileInitial = string.IsNullOrWhiteSpace(profileName) ? "?" : profileName.Trim()[0].ToString().ToUpperInvariant();
+    var profileRole = User.IsInRole("Admin") ? "Admin"
+        : User.IsInRole("Shop") ? "Shop"
+        : User.IsInRole("Ngo") ? "NGO"
+        : User.IsInRole("Receiver") ? "Receiver"
+        : "Member";
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#123c2c" />
     <title>@ViewData["Title"] - FoodBridge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,650&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/FoodBridge.Mvc.styles.css" asp-append-version="true" />
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-dark mb-4">
+        <nav class="navbar navbar-expand-lg navbar-dark sticky-top mb-4">
             <div class="container">
-                <a class="navbar-brand" asp-controller="Listings" asp-action="Index">FoodBridge</a>
+                <a class="navbar-brand" asp-controller="Listings" asp-action="Index"><span class="brand-mark"></span>FoodBridge</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="nav">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Listings" asp-action="Index">Listings</a>
+                            <a class="@NavClass("Listings")" aria-current="@NavCurrent("Listings")" asp-controller="Listings" asp-action="Index">Listings</a>
                         </li>
                         @if (User.IsInRole("Shop"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Shop" asp-action="Index">Dashboard</a>
+                                <a class="@NavClass("Shop", "Index")" aria-current="@NavCurrent("Shop", "Index")" asp-controller="Shop" asp-action="Index">Dashboard</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Shop" asp-action="Create">Post food</a>
+                                <a class="@NavClass("Shop", "Create")" aria-current="@NavCurrent("Shop", "Create")" asp-controller="Shop" asp-action="Create">Post food</a>
                             </li>
                         }
                         @if (User.IsInRole("Shop") || User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Reports" asp-action="Impact">Impact</a>
+                                <a class="@NavClass("Reports")" aria-current="@NavCurrent("Reports")" asp-controller="Reports" asp-action="Impact">Impact</a>
                             </li>
                         }
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Approvals" asp-action="Index">Approvals</a>
+                                <a class="@NavClass("Approvals")" aria-current="@NavCurrent("Approvals")" asp-controller="Approvals" asp-action="Index">Approvals</a>
                             </li>
                         }
                         @if (User.IsInRole("Receiver") || User.IsInRole("Ngo"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Activity" asp-action="Index">My Activity</a>
+                                <a class="@NavClass("Activity")" aria-current="@NavCurrent("Activity")" asp-controller="Activity" asp-action="Index">My Activity</a>
                             </li>
                         }
                     </ul>
@@ -66,8 +85,40 @@
                                     <p class="text-muted small px-3 py-2 mb-0">No notifications yet.</p>
                                 </div>
                             </li>
-                            <li class="nav-item">
-                                <span class="navbar-text me-3">@User.Identity.Name</span>
+                            <li class="nav-item dropdown profile-menu me-2">
+                                <button class="profile-toggle dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Profile menu">
+                                    <span class="profile-avatar" aria-hidden="true">@profileInitial</span>
+                                    <span class="profile-meta">
+                                        <span class="profile-name">@User.Identity.Name</span>
+                                        <span class="profile-role role-@profileRole.ToLowerInvariant()">@profileRole</span>
+                                    </span>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end profile-dropdown">
+                                    <div class="profile-head">
+                                        <span class="profile-avatar profile-avatar-lg" aria-hidden="true">@profileInitial</span>
+                                        <div>
+                                            <strong class="d-block">@User.Identity.Name</strong>
+                                            <span class="profile-role role-@profileRole.ToLowerInvariant()">@profileRole</span>
+                                        </div>
+                                    </div>
+                                    <div class="dropdown-divider"></div>
+                                    @if (User.IsInRole("Shop"))
+                                    {
+                                        <a class="dropdown-item" asp-controller="Shop" asp-action="Index">Dashboard</a>
+                                        <a class="dropdown-item" asp-controller="Shop" asp-action="Create">Post food</a>
+                                        <a class="dropdown-item" asp-controller="Reports" asp-action="Impact">Impact report</a>
+                                    }
+                                    else if (User.IsInRole("Admin"))
+                                    {
+                                        <a class="dropdown-item" asp-controller="Approvals" asp-action="Index">Approvals</a>
+                                        <a class="dropdown-item" asp-controller="Reports" asp-action="Impact">Impact report</a>
+                                    }
+                                    else if (User.IsInRole("Receiver") || User.IsInRole("Ngo"))
+                                    {
+                                        <a class="dropdown-item" asp-controller="Activity" asp-action="Index">My activity</a>
+                                    }
+                                    <a class="dropdown-item" asp-controller="Listings" asp-action="Index">Browse listings</a>
+                                </div>
                             </li>
                             <li class="nav-item">
                                 <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
@@ -89,7 +140,7 @@
             </div>
         </nav>
     </header>
-    <div class="container pb-5">
+    <div class="container page-shell pb-4">
         <main role="main">
             @if (TempData["Message"] is string message)
             {
@@ -102,8 +153,8 @@
             @RenderBody()
         </main>
     </div>
-    <footer class="footer text-muted">
-        <div class="container">Surplus food, shared fairly. Times are shown in Lebanon time.</div>
+    <footer class="site-footer">
+        <div class="container d-flex flex-wrap justify-content-between gap-2"><span><span class="brand-mark brand-mark-sm"></span>FoodBridge</span><span>Surplus food, shared fairly. Times are shown in Lebanon time.</span></div>
     </footer>
     @if (User.Identity?.IsAuthenticated == true)
     {
@@ -115,6 +166,7 @@
     <script src="~/lib/signalr/signalr.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/ui.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

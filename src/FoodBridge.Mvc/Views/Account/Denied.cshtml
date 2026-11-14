@@ -1,5 +1,9 @@
 @{
     ViewData["Title"] = "Not allowed";
 }
-<h1>That page is for another role</h1>
-<p><a asp-controller="Listings" asp-action="Index">Back to listings</a></p>
+<section class="status-page">
+    <div class="status-icon" aria-hidden="true">&#128274;</div>
+    <h1>That page is for another role</h1>
+    <p>Your account does not have access to this area. If you think this is a mistake, check which account you are logged in with.</p>
+    <a class="btn btn-success" asp-controller="Listings" asp-action="Index">Back to listings</a>
+</section>

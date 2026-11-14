@@ -1,42 +1,58 @@
 @model Activity
 @{
     ViewData["Title"] = "My Activity";
+    var pending = Model.Reservations.Count(r => r.Status == "Pending");
 }
 
-<h1>My Activity</h1>
+<section class="page-heading">
+    <h1>My Activity</h1>
+    <p>Your requests, pickup codes and reliability in one place.</p>
+</section>
 
 @if (ViewData["Error"] is string error)
 {
     <div class="alert alert-danger">@error</div>
 }
 
-@if (Model.ReliabilityScore is int score)
-{
-    <section class="card listing-card mb-4">
-        <div class="card-body">
-            <p class="mb-1">Reliability score</p>
-            <p class="display-6 mb-0">@score</p>
+<div class="stat-tiles">
+    @if (Model.ReliabilityScore is int score)
+    {
+        <div class="stat-tile stat-feature">
+            <span class="stat-label">Reliability score</span>
+            <span class="stat-value">@score</span>
             @if (Model.ReceiverType is not null)
             {
-                <p class="text-muted mb-0">@Model.ReceiverType</p>
+                <span class="stat-note">@Model.ReceiverType</span>
             }
             @if (Model.BlockedUntil is DateTime blocked)
             {
-                <p class="text-danger mb-0">Blocked until @LebanonTime.Format(blocked)</p>
+                <span class="stat-note text-danger">Blocked until @LebanonTime.Format(blocked)</span>
             }
         </div>
-    </section>
-}
+    }
+    <div class="stat-tile">
+        <span class="stat-label">Requests</span>
+        <span class="stat-value">@Model.Requests.Count</span>
+    </div>
+    <div class="stat-tile">
+        <span class="stat-label">Pickups waiting</span>
+        <span class="stat-value">@pending</span>
+    </div>
+</div>
 
-<h2 class="h4">Requests</h2>
+<h2 class="section-title">Requests</h2>
 @if (Model.Requests.Count == 0)
 {
-    <p class="text-muted">No requests yet.</p>
+    <div class="empty-state text-center">
+        <div class="empty-icon" aria-hidden="true">&#128230;</div>
+        <p class="mb-3">No requests yet.</p>
+        <a class="btn btn-outline-success btn-sm" asp-controller="Listings" asp-action="Index">Browse food</a>
+    </div>
 }
 else
 {
-    <div class="table-responsive mb-4">
-        <table class="table">
+    <div class="table-responsive table-wrap mb-4">
+        <table class="table data-table">
             <thead>
                 <tr>
                     <th>Listing</th>
@@ -49,10 +65,10 @@ else
                 @foreach (var request in Model.Requests)
                 {
                     <tr>
-                        <td><a asp-controller="Listings" asp-action="Details" asp-route-id="@request.ListingId">@request.ListingTitle</a></td>
+                        <td><a class="table-link" asp-controller="Listings" asp-action="Details" asp-route-id="@request.ListingId">@request.ListingTitle</a></td>
                         <td>@request.RequestedQuantity</td>
                         <td>@request.AllocatedQuantity</td>
-                        <td>@request.Status</td>
+                        <td><span class="status status-@request.Status.ToLowerInvariant()">@request.Status</span></td>
                     </tr>
                 }
             </tbody>
@@ -60,15 +76,18 @@ else
     </div>
 }
 
-<h2 class="h4">Pickup codes</h2>
+<h2 class="section-title">Pickup codes</h2>
 @if (Model.Reservations.Count == 0)
 {
-    <p class="text-muted">No reservations yet.</p>
+    <div class="empty-state text-center">
+        <div class="empty-icon" aria-hidden="true">&#127915;</div>
+        <p class="mb-0">No reservations yet. Your pickup codes will show up here.</p>
+    </div>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table">
+    <div class="table-responsive table-wrap">
+        <table class="table data-table">
             <thead>
                 <tr>
                     <th>Listing</th>
@@ -82,15 +101,17 @@ else
                 @foreach (var reservation in Model.Reservations)
                 {
                     <tr>
-                        <td><a asp-controller="Listings" asp-action="Details" asp-route-id="@reservation.ListingId">@reservation.ListingTitle</a></td>
+                        <td><a class="table-link" asp-controller="Listings" asp-action="Details" asp-route-id="@reservation.ListingId">@reservation.ListingTitle</a></td>
                         <td>@reservation.Quantity</td>
-                        <td class="pickup-code">@reservation.PickupCode</td>
-                        <td>@reservation.Status</td>
+                        <td>
+                            <button type="button" class="code-chip pickup-code" data-copy="@reservation.PickupCode" title="Click to copy">@reservation.PickupCode</button>
+                        </td>
+                        <td><span class="status status-@reservation.Status.ToLowerInvariant()">@reservation.Status</span></td>
                         <td>
                             @if (reservation.Status == "Pending")
                             {
                                 <form asp-action="Cancel" asp-route-id="@reservation.Id" method="post">
-                                    <button class="btn btn-sm btn-outline-secondary" type="submit">Cancel</button>
+                                    <button class="btn btn-sm btn-outline-secondary" type="submit" data-confirm="Cancel this reservation?">Cancel</button>
                                 </form>
                             }
                         </td>
