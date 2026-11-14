@@ -3,17 +3,25 @@
     ViewData["Title"] = "Allocation result";
 }
 
-<h1>Who received the food</h1>
-<p class="text-muted">Higher scores are served first. A score of zero still appears here when the request was not granted.</p>
-<p><a asp-action="Index">Back to the dashboard</a></p>
+<nav class="crumbs" aria-label="Breadcrumb">
+    <a asp-action="Index">&larr; Back to the dashboard</a>
+</nav>
+
+<section class="page-heading">
+    <h1>Who received the food</h1>
+    <p>Higher scores are served first. A score of zero still appears here when the request was not granted.</p>
+</section>
 @if (Model.Count == 0)
 {
-    <p class="text-muted">This listing has no requests.</p>
+    <div class="empty-state text-center">
+        <div class="empty-icon" aria-hidden="true">&#128237;</div>
+        <p class="mb-0">This listing has no requests.</p>
+    </div>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table">
+    <div class="table-responsive table-wrap">
+        <table class="table data-table">
             <thead>
                 <tr>
                     <th>Receiver</th>
@@ -28,12 +36,21 @@ else
                 @foreach (var line in Model)
                 {
                     <tr>
-                        <td>@line.ReceiverName</td>
+                        <td><strong>@line.ReceiverName</strong></td>
                         <td>@line.RequestedQuantity</td>
                         <td>@line.GrantedQuantity</td>
                         <td>@line.PriorityScore</td>
-                        <td>@line.Status</td>
-                        <td>@(string.IsNullOrWhiteSpace(line.PickupCode) ? "None" : line.PickupCode)</td>
+                        <td><span class="status status-@line.Status.ToLowerInvariant()">@line.Status</span></td>
+                        <td>
+                            @if (string.IsNullOrWhiteSpace(line.PickupCode))
+                            {
+                                <span class="text-muted">None</span>
+                            }
+                            else
+                            {
+                                <span class="code-chip pickup-code">@line.PickupCode</span>
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>

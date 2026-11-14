@@ -1,36 +1,64 @@
 @model ListingPage
 @{
     ViewData["Title"] = "Dashboard";
+    var openCount = Model.Items.Count(l => l.Status == "Open");
+    var allocatedCount = Model.Items.Count(l => l.Status == "Allocated");
+    var closedCount = Model.Items.Count(l => l.Status == "Closed");
 }
 
-<section class="page-heading d-flex justify-content-between align-items-center">
-    <h1>Shop dashboard</h1>
-    <a class="btn btn-success" asp-action="Create">Post food</a>
+<section class="page-heading d-flex justify-content-between align-items-end flex-wrap gap-2">
+    <div>
+        <h1>Shop dashboard</h1>
+        <p class="mb-0">Post surplus, allocate requests, and confirm pickups.</p>
+    </div>
+    <a class="btn btn-success" asp-action="Create">+ Post food</a>
 </section>
 
-<form asp-action="Collect" method="post" class="card listing-card mb-4">
+<div class="stat-tiles">
+    <div class="stat-tile stat-feature">
+        <span class="stat-label">Open for requests</span>
+        <span class="stat-value">@openCount</span>
+    </div>
+    <div class="stat-tile">
+        <span class="stat-label">Allocated</span>
+        <span class="stat-value">@allocatedCount</span>
+    </div>
+    <div class="stat-tile">
+        <span class="stat-label">Closed</span>
+        <span class="stat-value">@closedCount</span>
+    </div>
+</div>
+
+<form asp-action="Collect" method="post" class="card listing-card mb-4 panel pickup-panel">
     <div class="card-body">
         <h2 class="h5">Confirm a pickup</h2>
+        <p class="text-muted small mb-3">Ask the receiver for their code and enter it to mark the food as collected.</p>
         <div class="row g-2 align-items-end">
-            <div class="col-sm-6">
+            <div class="col-sm-6 col-md-5">
                 <label class="form-label" for="pickupCode">Pickup code</label>
-                <input class="form-control" id="pickupCode" name="pickupCode" />
+                <input class="form-control code-input" id="pickupCode" name="pickupCode" autocomplete="off" autocapitalize="characters" spellcheck="false" />
             </div>
             <div class="col-sm-3">
-                <button class="btn btn-success" type="submit">Confirm</button>
+                <button class="btn btn-success" type="submit" data-loading-text="Checking...">Confirm</button>
             </div>
         </div>
     </div>
 </form>
 
+<h2 class="section-title">Your listings</h2>
 @if (Model.Items.Count == 0)
 {
-    <p class="text-muted">You have not posted any food yet.</p>
+    <div class="empty-state text-center">
+        <div class="empty-icon" aria-hidden="true">&#127859;</div>
+        <h2 class="h5">Nothing posted yet</h2>
+        <p class="mb-3">You have not posted any food yet. Share your first surplus item.</p>
+        <a class="btn btn-success btn-sm" asp-action="Create">Post food</a>
+    </div>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table">
+    <div class="table-responsive table-wrap">
+        <table class="table data-table">
             <thead>
                 <tr>
                     <th>Listing</th>
@@ -44,18 +72,19 @@ else
                 @foreach (var listing in Model.Items)
                 {
                     <tr>
-                        <td><a asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id">@listing.Title</a></td>
+                        <td><a class="table-link" asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id">@listing.Title</a></td>
                         <td>@listing.RemainingQuantity</td>
-                        <td>@listing.Status</td>
+                        <td><span class="status status-@listing.Status.ToLowerInvariant()">@listing.Status</span></td>
                         <td>@LebanonTime.Format(listing.RequestWindowEndsAt)</td>
-                        <td class="text-nowrap">
+                        <td>
+                            <div class="row-actions">
                             @if (listing.Status == "Open")
                             {
                                 <form asp-action="Allocate" asp-route-id="@listing.Id" method="post" class="d-inline">
                                     <button class="btn btn-sm btn-success" type="submit">Allocate</button>
                                 </form>
                                 <form asp-action="Cancel" asp-route-id="@listing.Id" method="post" class="d-inline">
-                                    <button class="btn btn-sm btn-outline-danger" type="submit">Cancel</button>
+                                    <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Cancel this listing? You cannot undo this.">Cancel</button>
                                 </form>
                             }
                             @if (listing.Status is "Allocated" or "Closed")
@@ -65,9 +94,10 @@ else
                             @if (listing.Status is "Open" or "Allocated")
                             {
                                 <form asp-action="Close" asp-route-id="@listing.Id" method="post" class="d-inline">
-                                    <button class="btn btn-sm btn-outline-secondary" type="submit">Close</button>
+                                    <button class="btn btn-sm btn-outline-secondary" type="submit" data-confirm="Close this listing?">Close</button>
                                 </form>
                             }
+                            </div>
                         </td>
                     </tr>
                 }

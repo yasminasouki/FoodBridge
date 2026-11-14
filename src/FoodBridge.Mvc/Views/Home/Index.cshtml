@@ -1,8 +1,42 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<section class="hero hero-landing">
+    <div>
+        <span class="eyebrow">Surplus food, shared fairly</span>
+        <h1>Good food should be eaten, not binned.</h1>
+        <p>FoodBridge connects shops with surplus food to the people and NGOs who need it, with fair allocation and simple pickup codes.</p>
+        <div class="d-flex gap-2 flex-wrap mt-3">
+            <a class="btn btn-light" asp-controller="Listings" asp-action="Index">Browse food</a>
+            @if (User.Identity?.IsAuthenticated != true)
+            {
+                <a class="btn btn-outline-light" asp-controller="Account" asp-action="Register">Create an account</a>
+            }
+        </div>
+    </div>
+</section>
+
+<div class="row g-3 feature-grid">
+    <div class="col-md-4">
+        <div class="card listing-card h-100"><div class="card-body">
+            <div class="feature-icon" aria-hidden="true">&#127822;</div>
+            <h2 class="h5">Shops post surplus</h2>
+            <p class="text-muted mb-0">Share what you cannot sell with a request window and pickup time.</p>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card listing-card h-100"><div class="card-body">
+            <div class="feature-icon" aria-hidden="true">&#9878;&#65039;</div>
+            <h2 class="h5">Fair allocation</h2>
+            <p class="text-muted mb-0">Requests are served by reliability score so food reaches people who collect it.</p>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card listing-card h-100"><div class="card-body">
+            <div class="feature-icon" aria-hidden="true">&#127915;</div>
+            <h2 class="h5">Pick up with a code</h2>
+            <p class="text-muted mb-0">Show your code at the shop and the pickup is confirmed instantly.</p>
+        </div></div>
+    </div>
 </div>

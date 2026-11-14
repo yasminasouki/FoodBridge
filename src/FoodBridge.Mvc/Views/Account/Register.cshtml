@@ -3,60 +3,85 @@
     ViewData["Title"] = "Register";
 }
 
-<h1>Create an account</h1>
-<form asp-action="Register" method="post" class="form-card">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <div class="mb-3">
-        <label asp-for="FullName" class="form-label"></label>
-        <input asp-for="FullName" class="form-control" />
-        <span asp-validation-for="FullName" class="text-danger"></span>
+<section class="auth-center auth-center-wide">
+    <div class="auth-brand">
+        <span class="brand-badge" aria-hidden="true"></span>
+        <h1>FoodBridge</h1>
+        <p>Surplus food, shared fairly.</p>
     </div>
-    <div class="mb-3">
-        <label asp-for="Email" class="form-label"></label>
-        <input asp-for="Email" class="form-control" />
-        <span asp-validation-for="Email" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="Password" class="form-label"></label>
-        <input asp-for="Password" class="form-control" />
-        <span asp-validation-for="Password" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="Role" class="form-label"></label>
-        <select asp-for="Role" class="form-select">
-            <option>Receiver</option>
-            <option>Ngo</option>
-            <option>Shop</option>
-        </select>
-    </div>
-    <div class="mb-3">
-        <label asp-for="AreaId" class="form-label"></label>
-        <select asp-for="AreaId" class="form-select">
-            <option value="">Choose an area</option>
-            @foreach (var area in Model.Areas)
-            {
-                <option value="@area.Id">@area.Name, @area.District</option>
-            }
-        </select>
-        <span asp-validation-for="AreaId" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="ShopName" class="form-label"></label>
-        <input asp-for="ShopName" class="form-control" />
-        <span asp-validation-for="ShopName" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="Address" class="form-label"></label>
-        <input asp-for="Address" class="form-control" />
-        <span asp-validation-for="Address" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="PeopleServed" class="form-label"></label>
-        <input asp-for="PeopleServed" class="form-control" />
-        <span asp-validation-for="PeopleServed" class="text-danger"></span>
-    </div>
-    <button class="btn btn-success" type="submit">Register</button>
-</form>
+    <form asp-action="Register" method="post" class="auth-card">
+        <h2 class="h4 mb-1">Create an account</h2>
+        <p class="text-muted mb-3">It takes less than a minute. Shops and NGOs are approved by an admin before they start.</p>
+        <div class="role-hint">
+            <span><strong>Receiver</strong> up to 2 units</span>
+            <span><strong>NGO</strong> up to 10 units</span>
+            <span><strong>Shop</strong> posts surplus</span>
+        </div>
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+
+        <p class="form-section">About you</p>
+        <div class="mb-3">
+            <label asp-for="FullName" class="form-label"></label>
+            <input asp-for="FullName" class="form-control" autocomplete="name" />
+            <span asp-validation-for="FullName" class="field-error"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" autocomplete="email" />
+            <span asp-validation-for="Email" class="field-error"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Password" class="form-label"></label>
+            <div class="password-field">
+                <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                <button type="button" class="password-toggle" data-toggle-password aria-label="Show password">Show</button>
+            </div>
+            <span asp-validation-for="Password" class="field-error"></span>
+        </div>
+
+        <p class="form-section">Account type and area</p>
+        <div class="row g-3 mb-3">
+            <div class="col-sm-5">
+                <label asp-for="Role" class="form-label"></label>
+                <select asp-for="Role" class="form-select">
+                    <option>Receiver</option>
+                    <option>Ngo</option>
+                    <option>Shop</option>
+                </select>
+            </div>
+            <div class="col-sm-7">
+                <label asp-for="AreaId" class="form-label"></label>
+                <select asp-for="AreaId" class="form-select">
+                    <option value="">Choose an area</option>
+                    @foreach (var area in Model.Areas)
+                    {
+                        <option value="@area.Id">@area.Name, @area.District</option>
+                    }
+                </select>
+                <span asp-validation-for="AreaId" class="field-error"></span>
+            </div>
+        </div>
+
+        <p class="form-section">Shop or NGO details <span class="text-muted fw-normal">(only if it applies to you)</span></p>
+        <div class="mb-3">
+            <label asp-for="ShopName" class="form-label"></label>
+            <input asp-for="ShopName" class="form-control" />
+            <span asp-validation-for="ShopName" class="field-error"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Address" class="form-label"></label>
+            <input asp-for="Address" class="form-control" autocomplete="street-address" />
+            <span asp-validation-for="Address" class="field-error"></span>
+        </div>
+        <div class="mb-4">
+            <label asp-for="PeopleServed" class="form-label"></label>
+            <input asp-for="PeopleServed" class="form-control" />
+            <span asp-validation-for="PeopleServed" class="field-error"></span>
+        </div>
+        <button class="btn btn-success w-100" type="submit" data-loading-text="Creating account...">Register</button>
+        <p class="auth-switch">Already registered? <a asp-action="Login">Log in</a></p>
+    </form>
+</section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

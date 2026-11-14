@@ -1,22 +1,30 @@
 @model ListingSummary
-<article class="card listing-card h-100">
+@{
+    var isWaitlist = Model.Status == "Allocated" && Model.RemainingQuantity == 0;
+    var isLow = !isWaitlist && Model.RemainingQuantity > 0 && Model.RemainingQuantity <= 2;
+}
+<article class="card listing-card h-100@(isWaitlist ? " is-waitlist" : isLow ? " is-low" : "")">
     <div class="card-body d-flex flex-column">
         <div class="d-flex justify-content-between gap-2">
             <h2 class="h5 card-title mb-1">@Model.Title</h2>
             @if (Model.Status == "Allocated" && Model.RemainingQuantity == 0)
             {
-                <span class="badge text-bg-success">Waitlist</span>
+                <span class="qty-pill status-waitlist">Waitlist</span>
+            }
+            else if (isLow)
+            {
+                <span class="qty-pill status-pending">Only @Model.RemainingQuantity left</span>
             }
             else
             {
-                <span class="badge text-bg-success">@Model.RemainingQuantity left</span>
+                <span class="qty-pill">@Model.RemainingQuantity left</span>
             }
         </div>
-        <p class="text-muted mb-2">@Model.ShopName · @Model.AreaName</p>
+        <p class="card-kicker mb-2">@Model.ShopName · @Model.AreaName</p>
         <p class="mb-2">
             @foreach (var category in Model.Categories)
             {
-                <span class="badge text-bg-light border me-1">@category</span>
+                <span class="badge cat-pill me-1">@category</span>
             }
         </p>
         @if (Model.Status == "Allocated")
@@ -27,6 +35,6 @@
         {
             <p class="small mb-3">Request until @LebanonTime.Format(Model.RequestWindowEndsAt)</p>
         }
-        <a class="btn btn-outline-success mt-auto" asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id">View</a>
+        <a class="btn @(isWaitlist ? "btn-outline-secondary" : "btn-success") mt-auto stretched-link" asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id">@(isWaitlist ? "Join waitlist" : "View & request")</a>
     </div>
 </article>
